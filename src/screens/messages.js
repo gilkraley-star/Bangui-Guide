@@ -3,7 +3,7 @@ import { $app, shell, skel, errBox, notConfigured, photoBox, onLeave, refreshBad
 
 export async function messages() {
   shell(`<div class="hero safe-top" style="padding-bottom:30px"><div style="display:flex;gap:12px;align-items:center"><span class="icb" style="width:46px;height:46px">${svg(I.msg, 22, '#fff')}</span><div><h1 style="font-size:23px">Messages</h1><div style="font-size:12.5px;opacity:.85">Vos conversations avec les établissements</div></div></div></div>
-    <div class="ch" style="padding-top:18px" id="ch"></div><div class="list" id="cl">${skel(3)}</div>`, 'msg');
+    <div class="ch" style="padding-top:18px" id="ch"></div><div class="list hz" id="cl">${skel(3)}</div>`, 'msg');
   const cl = document.getElementById('cl');
   if (!configured) { cl.innerHTML = notConfigured(); return; }
   const prof = await getProfile().catch(() => null);

@@ -32,6 +32,7 @@ export async function place(id) {
   const itemInfo = ITEM[p.category], tabs = [];
   if (itemInfo) tabs.push(['items', itemInfo[0], CI[itemInfo[1]]]);
   tabs.push(['about', 'À propos', I.info], ['reviews', 'Avis', I.star], ['photos', 'Photos', I.img], ['infos', 'Infos', I.pin]);
+  if (prof && (prof.role === 'admin' || p.owner_id === prof.uid)) tabs.push(['admin', 'Gérer', I.edit]);
   let tab = tabs[0][0];
   const hasGps = p.lat != null && p.lng != null;
   const url = hasGps ? `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name + ' Bangui')}`;
@@ -43,7 +44,7 @@ export async function place(id) {
     const cards = ['hotel', 'commerce', 'pharmacie'].includes(p.category);
     const th = it => itemPhoto(it) ? `<div style="background:center/cover url('${esc(itemPhoto(it))}')"></div>` : photoBox({ category: p.category }, '', 30);
     return cards ? `<div class="icards">${its.map(it => `<div class="icd"><div class="ti">${th(it)}</div><div class="tx"><b style="font-size:14px">${esc(it.name)}</b><div class="pr" style="color:#E2541F;font-weight:800;margin-top:3px">${esc(fmtPrice(it.price, it.unit))}</div></div></div>`).join('')}</div>`
-      : `<div class="card2" style="padding:6px 12px">${its.map(it => `<div class="itm"><div class="ti">${th(it)}</div><div style="flex:1;min-width:0"><b>${esc(it.name)}</b>${it.description ? `<div class="sub" style="margin:2px 0 0">${esc(it.description)}</div>` : ''}</div><span class="pr">${esc(fmtPrice(it.price, it.unit))}</span></div>`).join('')}</div>`;
+      : `<div class="card2 itmwrap">${its.map(it => `<div class="itm"><div class="ti">${th(it)}</div><div style="flex:1;min-width:0"><b>${esc(it.name)}</b>${it.description ? `<div class="sub" style="margin:2px 0 0">${esc(it.description)}</div>` : ''}</div><span class="pr">${esc(fmtPrice(it.price, it.unit))}</span></div>`).join('')}</div>`;
   };
   const row = (ic, tx, label) => tx ? `<div class="irow"><span class="ic">${svg(ic, 18, '#E2541F')}</span><div><div class="il">${label}</div><div class="iv">${esc(tx)}</div></div></div>` : '';
   const views = {
@@ -54,12 +55,14 @@ export async function place(id) {
     reviews: () => `<div class="card2"><div class="sum"><div class="big">${avg != null ? avg.toFixed(1) : '–'}</div><div>${stars(avg, 18)}<div class="sub" style="margin-top:4px">${n} avis</div></div></div></div>
       <div class="card2"><div class="sh">${mine ? 'Modifier mon avis' : 'Donner mon avis'}</div>${prof ? `<div class="starpick" id="sp">${[1, 2, 3, 4, 5].map(i => `<button data-v="${i}" aria-label="${i} étoiles">${svg(I.star, 30, '#FFB020', 1.6).replace('fill="none"', `fill="${(mine?.rating || 0) >= i ? '#FFB020' : 'none'}"`)}</button>`).join('')}</div>
         <div class="field" style="margin-bottom:10px"><textarea id="rc" maxlength="1000" placeholder="Votre commentaire (facultatif)">${esc(mine?.comment || '')}</textarea></div><button class="btn" id="rs">Publier</button>` : `<button class="btn sec2" id="rl">Se connecter pour donner son avis</button>`}</div>
-      ${reviews.length ? `<div class="card2">${reviews.map(r => `<div class="rv"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:14px">${esc(r.author || 'Utilisateur')}</b>${stars(r.rating, 13)}</div>${r.comment ? `<p style="font-size:13.5px;color:#3A3F52;line-height:1.5;margin:6px 0 0">${esc(r.comment)}</p>` : ''}</div>`).join('')}</div>` : ''}`,
+      ${reviews.length ? `<div class="card2 rvwrap">${reviews.map(r => `<div class="rv"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:14px">${esc(r.author || 'Utilisateur')}</b>${stars(r.rating, 13)}</div>${r.comment ? `<p style="font-size:13.5px;color:#3A3F52;line-height:1.5;margin:6px 0 0">${esc(r.comment)}</p>` : ''}</div>`).join('')}</div>` : ''}`,
     photos: () => { const ph = [heroOf(p), ...its.map(itemPhoto)].filter(Boolean); return ph.length ? `<div class="photos">${ph.map(u => `<div style="background:center/cover url('${esc(u)}')"></div>`).join('')}</div>` : `<div class="card2"><div class="empty" style="padding:20px">Pas encore de photos pour ce lieu.</div></div>`; },
+    admin: () => `${admin}${canManage ? `<a class="card2" style="display:flex;align-items:center;gap:10px;font-weight:700" href="#/manage/${id}">${svg(I.edit, 18)} Modifier les informations, le menu et les photos</a>` : ''}`,
     infos: () => `<div class="card2">${row(I.pin, p.address || p.area, 'ADRESSE')}${row(I.clock, p.hours, 'HORAIRES')}${row(I.phone, p.phone, 'TÉLÉPHONE')}${!p.address && !p.area && !p.hours && !p.phone ? '<div class="sub">Informations à compléter par l’établissement.</div>' : ''}</div>
       ${p.tags?.length ? `<div class="card2"><div class="sh">Services</div><div class="svc">${p.tags.map(tagChip).join('')}</div></div>` : ''}
       <a class="card2 irow" id="mapl" href="#" style="display:flex;align-items:center;gap:12px"><span class="ic">${svg(I.nav, 18, '#1E6BE0')}</span><div style="flex:1"><div class="iv">Ouvrir dans Google Maps</div></div>${svg(I.chev, 18, '#9AA0B4')}</a>`
   };
+  let bindAdmin = () => { };
   const admin = prof && prof.role === 'admin' ? `<div class="card2"><div class="il" style="margin-bottom:8px">ADMINISTRATION</div><div style="display:flex;flex-direction:column;gap:8px">
       ${sp ? '<button class="btn ghost" id="sp0">Retirer la mise en avant</button>' : '<button class="btn sec2" id="sp1">Activer la mise en avant (30 jours)</button>'}
       <div class="field" style="margin:4px 0 0"><label>Propriétaire (email du compte)</label><input id="own" type="email" placeholder="email@exemple.com"></div><button class="btn ghost" id="owb">Définir le propriétaire</button></div></div>` : '';
@@ -68,6 +71,7 @@ export async function place(id) {
     document.getElementById('tabs').innerHTML = tabs.map(([k, l, ic]) => `<button data-k="${k}" class="${k === tab ? 'on' : ''}">${svg(ic, 21, 'currentColor', 1.9)}${l}</button>`).join('');
     document.getElementById('tabc').innerHTML = views[tab]();
     document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => { tab = b.dataset.k; draw(); });
+    bindAdmin();
     const ml = document.getElementById('mapl'); if (ml) ml.onclick = e => { e.preventDefault(); window.open(url, '_system'); };
     const rl = document.getElementById('rl'); if (rl) rl.onclick = () => requireLogin('#/place/' + id);
     const rs = document.getElementById('rs');
@@ -77,16 +81,16 @@ export async function place(id) {
       rs.onclick = async () => { if (!val) { toast('Choisis une note'); return; } rs.disabled = true; const { error } = await sb.from('reviews').upsert({ place_id: id, user_id: prof.uid, rating: val, comment: document.getElementById('rc').value.trim() || null }, { onConflict: 'place_id,user_id' }); if (error) { toast('Erreur : ' + error.message); rs.disabled = false; } else { toast('Merci pour votre avis'); place(id); } };
     }
   };
-  $app.innerHTML = `<div class="scroll" id="scroll"><div class="dtop"><div class="dbar"><button class="back" id="back" aria-label="Retour">${svg(I.back, 20)}</button><span style="display:flex;align-items:center;gap:6px"><img src="logo.png" alt="" style="height:30px;border-radius:8px;background:#fff;padding:1px">${brand}</span>
+  $app.innerHTML = `<div class="scroll nov" id="scroll"><div class="dtop"><div class="dbar"><button class="back" id="back" aria-label="Retour">${svg(I.back, 20)}</button><span style="display:flex;align-items:center;gap:6px"><img src="logo.png" alt="" style="height:30px;border-radius:8px;background:#fff;padding:1px">${brand}</span>
       <div style="display:flex;gap:8px"><button class="back" id="fav" aria-label="Favori">${svg(I.heart, 19, isFav ? '#E2541F' : '#142A52').replace('fill="none"', isFav ? 'fill="#E2541F"' : 'fill="none"')}</button><button class="back" id="shr" aria-label="Partager">${svg(I.share, 18)}</button></div></div>
       <div class="dph">${photoBox(p, '', 56, true)}${sp ? spBadge(true) : ''}</div></div>
     <div class="sheet2"><div style="display:flex;gap:14px;align-items:center"><div class="ib" style="background:linear-gradient(150deg,${c.fg},${c.fg}BB)">${svg(catPath(p.category), 38, '#fff', 1.8)}</div>
       <div style="min-width:0;flex:1"><span class="pill" style="background:${c.bg};color:${c.fg}">${esc(c.label)}</span>${p.verified ? ' <span class="pill" style="background:#EAF8EF;color:#1E7A43">✓ Vérifié</span>' : ''}
       <h1 style="font-size:23px;line-height:1.15;margin:6px 0 4px">${esc(p.name)}</h1><div class="sub" style="margin:0;display:flex;gap:5px;align-items:center">${svg(PIN, 15, '#1E2A78', 2)} ${esc(p.area || 'Bangui')}</div></div></div>
       ${avg != null ? `<div style="display:flex;gap:8px;align-items:center;margin-top:10px"><b style="font-size:18px">${avg.toFixed(1).replace('.', ',')}</b>${stars(avg, 17)}<span class="sub" style="margin:0">(${n} avis)</span></div>` : ''}
-      ${p.description ? `<p style="font-size:14px;color:#3A3F52;line-height:1.5;margin:10px 0 0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">${esc(p.description)}</p>` : ''}
+      ${p.description ? `<p class="dsc">${esc(p.description)}</p>` : ''}
       <div class="acts">${p.phone ? `<a class="btn" style="flex:1.2" href="tel:${esc(p.phone.replace(/[^\d+]/g, ''))}">${svg(I.phone, 18, '#fff')} Appeler</a>` : ''}<button class="btn sec2" id="wr" style="flex:1">${svg(I.msg, 18, '#2A4A8A')} Écrire</button><button class="btn sec2" id="dir" style="flex:1.1">${svg(I.nav, 18, '#2A4A8A')} Itinéraire</button></div>
-      <div class="tabs" id="tabs"></div><div id="tabc"></div>${admin}${canManage ? `<a class="btn ghost" style="margin-bottom:12px" href="#/manage/${id}">${svg(I.edit, 18)} Gérer ce lieu</a>` : ''}<div id="sim"></div></div></div>`;
+      <div class="tabs" id="tabs"></div><div id="tabc"></div></div></div>`;
   bindBack(); draw();
   document.getElementById('dir').onclick = () => window.open(url, '_system');
   document.getElementById('wr').onclick = async e => {
@@ -98,11 +102,10 @@ export async function place(id) {
   };
   document.getElementById('fav').onclick = () => { const a = favs.get(), i = a.indexOf(p.id); i >= 0 ? a.splice(i, 1) : a.push(p.id); favs.set(a); toast(i >= 0 ? 'Retiré des favoris' : 'Ajouté aux favoris'); place(id); };
   document.getElementById('shr').onclick = async () => { const text = `${p.name} — ${p.address || p.area || 'Bangui'} (Bangui Guide)`; try { navigator.share ? await navigator.share({ title: p.name, text, url }) : (await navigator.clipboard.writeText(text + ' ' + url), toast('Copié')); } catch { } };
+  bindAdmin = () => {
   const setSp = async on => { const { error } = await sb.from('places').update(on ? { sponsored: true, sponsored_until: new Date(Date.now() + 30 * 864e5).toISOString() } : { sponsored: false, sponsored_until: null }).eq('id', id); error ? toast('Erreur : ' + error.message) : (toast(on ? 'Mise en avant activée' : 'Mise en avant retirée'), place(id)); };
   const b1 = document.getElementById('sp1'), b0 = document.getElementById('sp0'); if (b1) b1.onclick = () => setSp(true); if (b0) b0.onclick = () => setSp(false);
   const ow = document.getElementById('owb'); if (ow) ow.onclick = async () => { const { data, error } = await sb.rpc('set_place_owner', { p_id: id, p_email: document.getElementById('own').value.trim() }); toast(error ? 'Erreur : ' + error.message : data); };
-  sb.from('places').select('*').eq('status', 'published').eq('category', p.category).neq('id', id).limit(8).then(async ({ data }) => {
-    const el = document.getElementById('sim'); if (!el || !data || !data.length) return;
-    el.innerHTML = `<div class="sh" style="margin-top:6px">Dans la même catégorie</div><div class="hs" style="padding:0 0 8px">${data.map(x => `<a class="card" href="#/place/${x.id}">${photoBox(x, 'ph', 30)}<div class="tx"><div class="nm">${esc(x.name)}</div><div class="sub">${esc(x.area || '')}</div></div></a>`).join('')}</div>`;
-  });
+  };
+  bindAdmin();
 }

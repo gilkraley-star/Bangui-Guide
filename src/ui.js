@@ -28,7 +28,7 @@ export function photoBox(p, cls = '', icon = 28, hero = false) {
 
 export function shell(content, tab) {
   const t = (id, href, icon, label) => `<a href="${href}" class="${tab === id ? 'on' : ''}" data-t="${id}"><span class="ni">${svg(icon, 22, 'currentColor', tab === id ? 2.2 : 1.9)}<b class="bdg" id="bdg-${id}" style="display:none"></b></span><span>${label}</span></a>`;
-  $app.innerHTML = `<div class="scroll" id="scroll">${content}</div>
+  $app.innerHTML = `<div class="scroll nov" id="scroll">${content}</div>
   <nav class="nav">${t('home', '#/', I.home, 'Accueil')}${t('search', '#/search', I.compass, 'Explorer')}${t('map', '#/map', I.pin, 'Carte')}${t('msg', '#/messages', I.msg, 'Messages')}${t('profil', '#/profil', I.user, 'Profil')}</nav>`;
   refreshBadge();
 }
@@ -49,7 +49,7 @@ export const brand = `<span class="wm">Bangui <i>Guide</i></span>`;
 
 export function rowHtml(p) {
   const c = CAT[p.category], sp = isSponsored(p);
-  return `<a class="row2 ${sp ? 'sp' : ''}" href="#/place/${p.id}" style="--cf:${c?.fg || '#8A90A3'}">${photoBox(p, 'th2', 26)}<div class="bd">
+  return `<a class="row2 ${sp ? 'sp' : ''}" href="#/place/${p.id}" style="--cf:${c?.fg || '#8A90A3'}">${photoBox(p, 'th2', 26, true)}<div class="bd">
     <span class="nm">${esc(p.name)}</span>
     <div class="sub" style="margin:0"><span style="color:${c?.fg || '#8A90A3'};font-weight:600">${esc(c?.label || p.category)}</span>${p.area ? ' · ' + esc(p.area) : ''}</div>
     <div class="tags">${sp ? spBadge() : ''}${p.verified ? `<span class="pill" style="background:#EAF8EF;color:#1E7A43">${svg(I.check, 10, '#1E7A43', 3)} Vérifié</span>` : ''}${p._r != null ? `<span class="pill" style="background:#FFF6E0;color:#B5560C">★ ${Number(p._r).toFixed(1)}</span>` : ''}</div></div>
