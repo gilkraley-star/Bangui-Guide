@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#142A52"><meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>Bangui Guide — Ajouter un vol</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>html,body{margin:0;padding:0;background:#F7F8FB;overscroll-behavior:none}
+  body{margin:0;font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  *{scrollbar-width:none;-ms-overflow-style:none}
+  *::-webkit-scrollbar{display:none;width:0;height:0}
+  a{text-decoration:none;color:inherit}
+  *{transition:transform .18s cubic-bezier(.34,1.56,.64,1),box-shadow .2s ease,opacity .2s ease,background-color .2s ease}
+  a:active,button:active{transform:scale(.95)}
+  a:hover,button:hover{filter:brightness(1.03)}
+  x-dc>div{animation:bgFadeIn .38s cubic-bezier(.16,1,.3,1) both}
+  @keyframes bgFadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes fadeInUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+  .stagger>*{animation:fadeInUp .45s cubic-bezier(.16,1,.3,1) both}
+  .stagger>*:nth-child(1){animation-delay:.03s} .stagger>*:nth-child(2){animation-delay:.08s} .stagger>*:nth-child(3){animation-delay:.13s} .stagger>*:nth-child(4){animation-delay:.18s}
+  input::placeholder{color:#B4B9C9}
+  label{display:block;font-size:12.5px;font-weight:600;color:#3A3F52;margin-bottom:7px}
+  .field{width:100%;box-sizing:border-box;background:#F7F8FB;border:1px solid transparent;border-radius:12px;padding:13px 14px;font-size:14px;color:#142A52;outline:none}
+</style>
+</head><body>
+
+
+<div style="width:100%;height:100dvh;box-sizing:border-box;background:#FFFFFF;display:flex;flex-direction:column;overflow:hidden">
+
+  <div style="flex:none;padding:20px 20px 14px;display:flex;align-items:center;gap:14px;border-bottom:1px solid #ECEEF2">
+    <a href="EditVols.html" aria-label="Annuler" style="width:38px;height:38px;border-radius:11px;background:#F1F2F6;display:flex;align-items:center;justify-content:center;flex:none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#142A52" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </a>
+    <span style="font-size:15px;font-weight:700;color:#142A52;font-family:'Space Grotesk',sans-serif">Modifier un vol</span>
+  </div>
+
+  <div class="stagger" style="flex:1;overflow-y:auto;padding:22px 20px 24px;display:flex;flex-direction:column;gap:20px">
+
+    <div>
+      <label for="v-route">Trajet</label>
+      <input id="v-route" class="field" type="text" value="Bangui → Paris" placeholder="Ex : Bangui → Douala">
+    </div>
+
+    <div>
+      <label for="v-detail">Détail (compagnie, escale…)</label>
+      <input id="v-detail" class="field" type="text" value="Air France, via Douala" placeholder="Ex : Camair-Co, vol direct">
+    </div>
+
+    <div>
+      <label for="v-price">Prix (FCFA)</label>
+      <input id="v-price" class="field" type="text" value="650 000" placeholder="Ex : 185 000">
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:#F7F8FB;border-radius:14px">
+      <div>
+        <div style="font-size:13.5px;font-weight:600;color:#142A52">Vol actif</div>
+        <div style="font-size:11.5px;color:#8A90A3;margin-top:2px">Masquer si ce trajet n'est plus assuré</div>
+      </div>
+      <div style="width:44px;height:26px;border-radius:13px;background:#E2541F;flex:none;position:relative">
+        <div style="position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:10px;background:#FFFFFF"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="flex:none;padding:12px 20px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid #ECEEF2;background:#FFFFFF;display:flex;gap:10px">
+    <button style="flex:1;padding:14px;border-radius:14px;background:#FFF1F0;color:#C23B3B;font-size:14px;font-weight:700;border:none;cursor:pointer">Supprimer</button>
+    <a href="EditVols.html" style="flex:2;display:flex;align-items:center;justify-content:center;padding:14px;border-radius:14px;background:#E2541F;color:#FFFFFF;font-size:14.5px;font-weight:700">Enregistrer</a>
+  </div>
+
+</div>
+
+<script>if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{})</script>
+</body></html>

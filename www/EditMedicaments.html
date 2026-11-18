@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#142A52"><meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>Bangui Guide — Modifier ma pharmacie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>html,body{margin:0;padding:0;background:#F7F8FB;overscroll-behavior:none}
+  body{margin:0;font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  *{scrollbar-width:none;-ms-overflow-style:none}
+  *::-webkit-scrollbar{display:none;width:0;height:0}
+  a{text-decoration:none;color:inherit}
+  *{transition:transform .18s cubic-bezier(.34,1.56,.64,1),box-shadow .2s ease,opacity .2s ease,background-color .2s ease}
+  a:active,button:active{transform:scale(.95)}
+  a:hover,button:hover{filter:brightness(1.03)}
+  x-dc>div{animation:bgFadeIn .38s cubic-bezier(.16,1,.3,1) both}
+  @keyframes bgFadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes fadeInUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+  .stagger>*{animation:fadeInUp .45s cubic-bezier(.16,1,.3,1) both}
+  .stagger>*:nth-child(1){animation-delay:.03s} .stagger>*:nth-child(2){animation-delay:.08s} .stagger>*:nth-child(3){animation-delay:.13s}
+  input::placeholder{color:#B4B9C9}
+  label{display:block;font-size:12.5px;font-weight:600;color:#3A3F52;margin-bottom:7px}
+  .field{width:100%;box-sizing:border-box;background:#F7F8FB;border:1px solid transparent;border-radius:12px;padding:13px 14px;font-size:14px;color:#142A52;outline:none}
+  .tag{display:inline-flex;align-items:center;gap:6px;background:#F1F2F6;color:#142A52;font-size:12.5px;font-weight:600;padding:8px 8px 8px 13px;border-radius:999px}
+  .tag button{border:none;background:#E2E4EC;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none}
+</style>
+</head><body>
+
+
+<div style="width:100%;height:100dvh;box-sizing:border-box;background:#F7F8FB;display:flex;flex-direction:column;overflow:hidden">
+
+  <div style="flex:none;padding:20px 20px 14px;display:flex;align-items:center;justify-content:space-between;background:#FFFFFF;border-bottom:1px solid #ECEEF2">
+    <a href="CompteClient.html" aria-label="Retour à l'espace client" style="width:38px;height:38px;border-radius:11px;background:#F1F2F6;display:flex;align-items:center;justify-content:center;flex:none">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#142A52" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+    </a>
+    <span style="font-size:15px;font-weight:700;color:#142A52;font-family:'Space Grotesk',sans-serif">Modifier ma pharmacie</span>
+    <button aria-label="Enregistrer" style="width:38px;height:38px;border:none;border-radius:11px;background:#E2541F;display:flex;align-items:center;justify-content:center;flex:none;cursor:pointer">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+    </button>
+  </div>
+
+  <div class="stagger" style="flex:1;overflow-y:auto;padding:18px 20px 24px;display:flex;flex-direction:column;gap:20px">
+
+    <div style="display:flex;align-items:center;gap:8px;background:#EAF8EF;border-radius:12px;padding:10px 14px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="#1E7A43" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v5" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="16.2" r="1" fill="#FFFFFF"/></svg>
+      <span style="font-size:12px;color:#1E7A43;font-weight:600">Vos clients verront ces changements dès que vous enregistrez.</span>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:#FFFFFF;border-radius:16px;box-shadow:0 1px 2px rgba(20,42,82,.04),0 8px 20px rgba(20,42,82,.06)">
+      <div>
+        <div style="font-size:13.5px;font-weight:600;color:#142A52">Pharmacie de garde cette semaine</div>
+        <div style="font-size:11.5px;color:#8A90A3;margin-top:2px">Affiche un badge "de garde" sur votre fiche</div>
+      </div>
+      <div style="width:44px;height:26px;border-radius:13px;background:#E2541F;flex:none;position:relative">
+        <div style="position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:10px;background:#FFFFFF"></div>
+      </div>
+    </div>
+
+    <div>
+      <span style="font-size:10.5px;font-weight:700;letter-spacing:.4px;color:#FFFFFF;background:linear-gradient(135deg,#F5841F,#E2541F);padding:5px 12px;border-radius:999px;display:block;margin-bottom:10px">CATÉGORIES DE MÉDICAMENTS DISPONIBLES</span>
+      <div style="background:#FFFFFF;border-radius:16px;box-shadow:0 1px 2px rgba(20,42,82,.04),0 8px 20px rgba(20,42,82,.06);padding:16px;display:flex;flex-wrap:wrap;gap:8px">
+        <span class="tag">Antipaludéens <button aria-label="Retirer"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#5A5F72" stroke-width="3" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></span>
+        <span class="tag">Antibiotiques <button aria-label="Retirer"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#5A5F72" stroke-width="3" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></span>
+        <span class="tag">Antidouleurs <button aria-label="Retirer"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#5A5F72" stroke-width="3" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></span>
+        <span class="tag">Vitamines &amp; compléments <button aria-label="Retirer"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#5A5F72" stroke-width="3" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></span>
+        <span class="tag">Matériel médical <button aria-label="Retirer"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#5A5F72" stroke-width="3" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></span>
+        <span class="tag">Produits bébé <button aria-label="Retirer"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#5A5F72" stroke-width="3" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></span>
+      </div>
+    </div>
+
+    <div>
+      <label for="ph-new">Ajouter une catégorie</label>
+      <div style="display:flex;gap:8px">
+        <input id="ph-new" class="field" type="text" placeholder="Ex : Produits dermatologiques" style="flex:1">
+        <button style="flex:none;width:48px;border:none;border-radius:12px;background:#E2541F;color:#FFFFFF;font-size:20px;font-weight:600;cursor:pointer">+</button>
+      </div>
+    </div>
+
+    <div>
+      <label for="ph-hours">Horaires d'ouverture</label>
+      <input id="ph-hours" class="field" type="text" value="Lun–Sam 7h30–20h, Dim 9h–13h" placeholder="Ex : Lun–Sam 7h30–20h">
+    </div>
+
+  </div>
+
+  <div style="flex:none;padding:12px 20px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid #ECEEF2;background:#FFFFFF">
+    <button style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;box-sizing:border-box;padding:14px;border-radius:14px;background:#E2541F;color:#FFFFFF;font-size:14.5px;font-weight:700;border:none;cursor:pointer">
+      Enregistrer les modifications
+    </button>
+  </div>
+
+</div>
+
+<script>if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{})</script>
+</body></html>
