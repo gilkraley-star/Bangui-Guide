@@ -1,1 +1,1 @@
-{"appId":"cf.banguiguide.app","appName":"Bangui Guide","webDir":"www","backgroundColor":"#142A52","android":{"allowMixedContent":false}}
+{"appId":"cf.banguiguide.app","appName":"Bangui Guide","webDir":"dist","backgroundColor":"#F7F8FB","android":{"allowMixedContent":false}}
