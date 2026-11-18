@@ -12,18 +12,24 @@ export const spBadge = (abs) => `<span class="spb ${abs ? 'abs' : ''}">${svg(I.c
 export const stars = (v, s = 14) => { const full = Math.round((v || 0) * 2) / 2; return `<span class="stars">${[1, 2, 3, 4, 5].map(i => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="${full >= i ? '#FFB020' : full >= i - .5 ? 'url(#hs)' : '#E3E5EC'}" stroke="none"><defs><linearGradient id="hs"><stop offset="50%" stop-color="#FFB020"/><stop offset="50%" stop-color="#E3E5EC"/></linearGradient></defs><polygon points="12 2 15 9 22 9.5 17 14.5 18.5 22 12 18 5.5 22 7 14.5 2 9.5 9 9"/></svg>`).join('')}</span>`; };
 
 /* image du lieu ou illustration du secteur */
-const FALLBACK = [['mairie', 'img/mairie.jpg'], ['cath', 'img/cathedrale.jpg'], ['afrique', 'img/notre-dame-afrique.jpg'], ['mosqu', 'img/mosquee.jpg'], ['relais', 'img/restaurant.jpg']];
-export const photoOf = p => p.photo_url || (FALLBACK.find(([k]) => (p.name || '').toLowerCase().includes(k)) || [])[1] || null;
-export function photoBox(p, cls = '', icon = 28) {
+const FALLBACK = [['mairie', 'img/mairie.jpg', 'img/mairie-hero.jpg'], ['cath', 'img/cathedrale.jpg'], ['afrique', 'img/notre-dame-afrique.jpg'], ['mosqu', 'img/mosquee.jpg'],
+  ['relais', 'img/restaurant.jpg', 'img/relais-hero.jpg'], ['résidence', 'img/hotel-thumb.jpg', 'img/hotel-hero.jpg'], ['shopping', 'img/shop-hero.jpg', 'img/shop-hero.jpg'],
+  ['pharmacie centrale', 'img/pharmacie.jpg'], ['boulangerie', 'img/boulangerie.jpg'], ['total', 'img/station.jpg']];
+const ITEMPH = [['poulet', 'plat-poulet'], ['bœuf', 'plat-boeuf'], ['boeuf', 'plat-boeuf'], ['poisson', 'plat-poisson'], ['standard', 'chambre-standard'], ['confort', 'chambre-confort'], ['suite', 'suite'], ['portable', 'prod-pc'], ['smartphone', 'prod-phone'], ['imprimante', 'prod-imprimante']];
+const fb = p => FALLBACK.find(([k]) => (p.name || '').toLowerCase().includes(k));
+export const photoOf = p => p.photo_url || fb(p)?.[1] || null;
+export const heroOf = p => p.photo_url || fb(p)?.[2] || fb(p)?.[1] || null;
+export const itemPhoto = it => it.photo_url || ((k) => k ? `img/${k[1]}.jpg` : null)(ITEMPH.find(([w]) => (it.name || '').toLowerCase().includes(w)));
+export function photoBox(p, cls = '', icon = 28, hero = false) {
   const c = CAT[p.category] || { fg: '#8A90A3', bg: '#F1F2F6' };
-  const ph = photoOf(p); if (ph) return `<div class="${cls}" style="background:center/cover url('${esc(ph)}')"></div>`;
+  const ph = hero ? heroOf(p) : photoOf(p); if (ph) return `<div class="${cls}" style="background:center/cover url('${esc(ph)}')"></div>`;
   return `<div class="${cls} ph0" style="background:linear-gradient(135deg,${c.bg},#fff 140%)"><span class="ph-ring" style="border-color:${c.fg}22"></span>${svg(catPath(p.category), icon, c.fg, 1.6)}</div>`;
 }
 
 export function shell(content, tab) {
   const t = (id, href, icon, label) => `<a href="${href}" class="${tab === id ? 'on' : ''}" data-t="${id}"><span class="ni">${svg(icon, 22, 'currentColor', tab === id ? 2.2 : 1.9)}<b class="bdg" id="bdg-${id}" style="display:none"></b></span><span>${label}</span></a>`;
   $app.innerHTML = `<div class="scroll" id="scroll">${content}</div>
-  <nav class="nav">${t('home', '#/', I.home, 'Accueil')}${t('search', '#/search', I.compass, 'Explorer')}${t('map', '#/map', I.pin, 'Carte')}${t('favs', '#/favs', I.heart, 'Favoris')}${t('profil', '#/profil', I.user, 'Profil')}</nav>`;
+  <nav class="nav">${t('home', '#/', I.home, 'Accueil')}${t('search', '#/search', I.compass, 'Explorer')}${t('map', '#/map', I.pin, 'Carte')}${t('msg', '#/messages', I.msg, 'Messages')}${t('profil', '#/profil', I.user, 'Profil')}</nav>`;
   refreshBadge();
 }
 export async function refreshBadge() {

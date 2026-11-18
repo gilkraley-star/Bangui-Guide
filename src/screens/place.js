@@ -1,6 +1,6 @@
 import { esc, svg, I, CI, PIN, catPath, sb, configured, getProfile, requireLogin, favs, toast, fmtPrice, withDist, attachStats, isSponsored, fmtD } from '../core.js';
 import { CAT } from '../data.js';
-import { $app, onLeave, photoBox, spBadge, stars, errBox, notConfigured, brand, plain, topbar, bindBack, rowHtml } from '../ui.js';
+import { $app, onLeave, photoBox, itemPhoto, heroOf, spBadge, stars, errBox, notConfigured, brand, plain, topbar, bindBack, rowHtml } from '../ui.js';
 
 const ITEM = { restaurant: ['Menu', 'restaurant'], hotel: ['Chambres', 'hotel'], commerce: ['Produits', 'commerce'], pharmacie: ['Produits', 'pharmacie'], ecole: ['Niveaux', 'ecole'], universite: ['Filières', 'universite'], voyage: ['Vols', 'voyage'], garage: ['Services', 'garage'], salon: ['Services', 'salon'], banque: ['Services', 'banque'], hopital: ['Services', 'hopital'], transport: ['Tarifs', 'transport'], btp: ['Services', 'btp'], station: ['Services', 'station'] };
 const TAG_ICON = {
@@ -41,7 +41,7 @@ export async function place(id) {
   const itemsHtml = () => {
     if (!its.length) return `<div class="card2"><div class="empty" style="padding:20px">${itemInfo?.[0] || 'Contenu'} à venir. L’établissement n’a pas encore ajouté d’éléments.</div></div>`;
     const cards = ['hotel', 'commerce', 'pharmacie'].includes(p.category);
-    const th = it => it.photo_url ? `<div style="background:center/cover url('${esc(it.photo_url)}')"></div>` : photoBox({ category: p.category }, '', 30);
+    const th = it => itemPhoto(it) ? `<div style="background:center/cover url('${esc(itemPhoto(it))}')"></div>` : photoBox({ category: p.category }, '', 30);
     return cards ? `<div class="icards">${its.map(it => `<div class="icd"><div class="ti">${th(it)}</div><div class="tx"><b style="font-size:14px">${esc(it.name)}</b><div class="pr" style="color:#E2541F;font-weight:800;margin-top:3px">${esc(fmtPrice(it.price, it.unit))}</div></div></div>`).join('')}</div>`
       : `<div class="card2" style="padding:6px 12px">${its.map(it => `<div class="itm"><div class="ti">${th(it)}</div><div style="flex:1;min-width:0"><b>${esc(it.name)}</b>${it.description ? `<div class="sub" style="margin:2px 0 0">${esc(it.description)}</div>` : ''}</div><span class="pr">${esc(fmtPrice(it.price, it.unit))}</span></div>`).join('')}</div>`;
   };
@@ -55,7 +55,7 @@ export async function place(id) {
       <div class="card2"><div class="sh">${mine ? 'Modifier mon avis' : 'Donner mon avis'}</div>${prof ? `<div class="starpick" id="sp">${[1, 2, 3, 4, 5].map(i => `<button data-v="${i}" aria-label="${i} étoiles">${svg(I.star, 30, '#FFB020', 1.6).replace('fill="none"', `fill="${(mine?.rating || 0) >= i ? '#FFB020' : 'none'}"`)}</button>`).join('')}</div>
         <div class="field" style="margin-bottom:10px"><textarea id="rc" maxlength="1000" placeholder="Votre commentaire (facultatif)">${esc(mine?.comment || '')}</textarea></div><button class="btn" id="rs">Publier</button>` : `<button class="btn sec2" id="rl">Se connecter pour donner son avis</button>`}</div>
       ${reviews.length ? `<div class="card2">${reviews.map(r => `<div class="rv"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:14px">${esc(r.author || 'Utilisateur')}</b>${stars(r.rating, 13)}</div>${r.comment ? `<p style="font-size:13.5px;color:#3A3F52;line-height:1.5;margin:6px 0 0">${esc(r.comment)}</p>` : ''}</div>`).join('')}</div>` : ''}`,
-    photos: () => { const ph = [p.photo_url, ...its.map(i => i.photo_url)].filter(Boolean); return ph.length ? `<div class="photos">${ph.map(u => `<div style="background:center/cover url('${esc(u)}')"></div>`).join('')}</div>` : `<div class="card2"><div class="empty" style="padding:20px">Pas encore de photos pour ce lieu.</div></div>`; },
+    photos: () => { const ph = [heroOf(p), ...its.map(itemPhoto)].filter(Boolean); return ph.length ? `<div class="photos">${ph.map(u => `<div style="background:center/cover url('${esc(u)}')"></div>`).join('')}</div>` : `<div class="card2"><div class="empty" style="padding:20px">Pas encore de photos pour ce lieu.</div></div>`; },
     infos: () => `<div class="card2">${row(I.pin, p.address || p.area, 'ADRESSE')}${row(I.clock, p.hours, 'HORAIRES')}${row(I.phone, p.phone, 'TÉLÉPHONE')}${!p.address && !p.area && !p.hours && !p.phone ? '<div class="sub">Informations à compléter par l’établissement.</div>' : ''}</div>
       ${p.tags?.length ? `<div class="card2"><div class="sh">Services</div><div class="svc">${p.tags.map(tagChip).join('')}</div></div>` : ''}
       <a class="card2 irow" id="mapl" href="#" style="display:flex;align-items:center;gap:12px"><span class="ic">${svg(I.nav, 18, '#1E6BE0')}</span><div style="flex:1"><div class="iv">Ouvrir dans Google Maps</div></div>${svg(I.chev, 18, '#9AA0B4')}</a>`
@@ -77,9 +77,9 @@ export async function place(id) {
       rs.onclick = async () => { if (!val) { toast('Choisis une note'); return; } rs.disabled = true; const { error } = await sb.from('reviews').upsert({ place_id: id, user_id: prof.uid, rating: val, comment: document.getElementById('rc').value.trim() || null }, { onConflict: 'place_id,user_id' }); if (error) { toast('Erreur : ' + error.message); rs.disabled = false; } else { toast('Merci pour votre avis'); place(id); } };
     }
   };
-  $app.innerHTML = `<div class="scroll" id="scroll"><div class="dtop"><div class="dbar"><button class="back" id="back" aria-label="Retour">${svg(I.back, 20)}</button>${brand}
+  $app.innerHTML = `<div class="scroll" id="scroll"><div class="dtop"><div class="dbar"><button class="back" id="back" aria-label="Retour">${svg(I.back, 20)}</button><span style="display:flex;align-items:center;gap:6px"><img src="logo.png" alt="" style="height:30px;border-radius:8px;background:#fff;padding:1px">${brand}</span>
       <div style="display:flex;gap:8px"><button class="back" id="fav" aria-label="Favori">${svg(I.heart, 19, isFav ? '#E2541F' : '#142A52').replace('fill="none"', isFav ? 'fill="#E2541F"' : 'fill="none"')}</button><button class="back" id="shr" aria-label="Partager">${svg(I.share, 18)}</button></div></div>
-      <div class="dph">${photoBox(p, '', 56)}${sp ? spBadge(true) : ''}</div></div>
+      <div class="dph">${photoBox(p, '', 56, true)}${sp ? spBadge(true) : ''}</div></div>
     <div class="sheet2"><div style="display:flex;gap:14px;align-items:center"><div class="ib" style="background:linear-gradient(150deg,${c.fg},${c.fg}BB)">${svg(catPath(p.category), 38, '#fff', 1.8)}</div>
       <div style="min-width:0;flex:1"><span class="pill" style="background:${c.bg};color:${c.fg}">${esc(c.label)}</span>${p.verified ? ' <span class="pill" style="background:#EAF8EF;color:#1E7A43">✓ Vérifié</span>' : ''}
       <h1 style="font-size:23px;line-height:1.15;margin:6px 0 4px">${esc(p.name)}</h1><div class="sub" style="margin:0;display:flex;gap:5px;align-items:center">${svg(PIN, 15, '#1E2A78', 2)} ${esc(p.area || 'Bangui')}</div></div></div>
