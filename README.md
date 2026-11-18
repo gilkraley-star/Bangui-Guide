@@ -12,4 +12,8 @@ Application Android (Capacitor + Vite + Supabase).
 
 Ajouter un agent : Supabase > Authentication > Users > Add user, puis `insert into public.profiles (id, full_name, role) select id, 'Nom', 'agent' from auth.users where email = '...';`
 
+## Version 2
+Exécuter aussi `supabase/migration_v2.sql` (comptes visiteurs, avis, messagerie, menu/chambres/produits, propriétaires).
+Authentication > Sign In / Providers : activer « Allow new users to sign up » et désactiver « Confirm email ».
+
 `design/maquette/` : maquette de design d'origine (non utilisée par l'app).
