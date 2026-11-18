@@ -187,3 +187,40 @@ h1,h2{font-family:'Space Grotesk',sans-serif;margin:0}
 .herophoto{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:62% 40%}
 .heroshade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,20,50,.62) 0,rgba(8,20,50,.18) 34%,rgba(8,20,50,0) 52%,rgba(8,20,50,.5) 72%,rgba(8,20,50,0) 90%)}
 .hero2 .in{z-index:2}
+
+.icb{position:relative}.icb .bdg{position:absolute;top:5px;right:6px;min-width:15px;height:15px;font-size:9px;padding:0 3px}
+.heroshade{background:linear-gradient(180deg,rgba(8,20,50,.6) 0,rgba(8,20,50,.12) 32%,rgba(20,70,190,0) 50%,rgba(14,52,150,.5) 74%,rgba(14,52,150,0) 92%)}
+
+.sec .more{margin-left:auto}.sec h2.sh{flex:none}
+
+/* accueil compact : tout tient sur un écran */
+.homec .hero2{height:182px;border-radius:0 0 26px 26px}
+.homec .hero2 .in{padding:calc(10px + var(--sat,0px)) 16px 0}
+.homec .logo img{height:36px}.homec .hrow{gap:9px}
+.homec .greet{bottom:34px;font-size:15px}.homec .greet b{font-size:20px}.homec .greet i{width:120px;height:3px;margin-top:4px}
+.homec .sbar2{margin:-22px 16px 0;padding:10px 16px}.homec .sbar2 input{font-size:14px}
+.homec .grid{gap:6px;padding:10px 12px 6px}
+.homec .gi{padding:6px 2px 5px;gap:4px;font-size:9.5px;border-radius:14px}.homec .gi i{width:34px;height:34px}.homec .gi i svg{width:19px;height:19px}
+.homec .zones{padding:2px 12px 8px;gap:7px}.homec .zc{padding:5px 12px;font-size:12px}
+.homec .bnr{padding:0 12px}.homec .banner{height:76px;border-radius:16px}
+.homec .banner .br{padding:8px 10px;gap:1px;flex-direction:column}.homec .banner .nm{font-size:14px!important}.homec .banner .br>div:nth-child(2){font-size:11px!important}
+.homec .banner .bb{margin-top:3px;padding:4px 10px;font-size:11px}
+.homec .banner .bl{width:44%}
+.homec .banner .bl .ph0 svg{width:30px;height:30px}.homec .banner .bl .ph0 .ph-ring{display:none}
+.homec .dots{padding:3px 0 0;gap:4px}.homec .dots i{width:5px;height:5px}
+.homec .sec{margin:6px 0 6px;padding:0 16px}.homec .sec h2{font-size:14.5px}
+.homec .list{gap:6px;padding:0 12px}
+.homec .row2{padding:4px;gap:9px;border-radius:14px}.homec .th2{width:92px;height:46px;border-radius:10px}.homec .th2 svg{width:20px;height:20px}.homec .th2 .ph-ring{display:none}
+.homec .row2 .bd{gap:1px}.homec .row2 .nm{font-size:13px}
+.homec .near{margin:8px 12px 0;padding:10px 12px}
+.homec .hero2{height:166px}.homec .greet{bottom:30px}
+.homec .gi{padding:5px 2px 4px;gap:3px;font-size:9px}.homec .gi i{width:30px;height:30px}.homec .gi i svg{width:17px;height:17px}
+.homec .grid{padding:8px 12px 4px;gap:5px}.homec .zc{padding:4px 11px;font-size:11.5px}.homec .zones{padding:2px 12px 6px}
+.homec .banner{height:84px}.homec .banner .br{justify-content:center}
+.homec .banner .br>div:nth-child(3){font-size:11px;line-height:1}
+.homec .row2 .pill{font-size:9px;padding:1px 6px}.homec .row2 .bd>div{line-height:1.15}
+.homec .row2 .bd{flex-direction:column}.homec .row2 .bd .pills,.homec .row2 .bd>div:last-child{margin-top:1px}
+.homec .th2{height:44px}.homec .list{gap:5px}.homec .sec{margin:4px 0 5px}
+
+.lb{border:0;background:#EEF3FF;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;margin:-6px -8px -6px 0}
+.homec .sec>div{width:100%}.homec .sbar2 input{text-overflow:ellipsis}

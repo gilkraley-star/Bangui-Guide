@@ -6,18 +6,20 @@ const GRID = ['restaurant', 'hotel', 'pharmacie', 'banque', 'hopital', 'culte', 
 const ZONES = ['Tous', 'Centre-ville', 'Km5', 'Koudoukou'];
 
 export async function home() {
+  const me0 = getPos();
   const cells = GRID.map(id => { const c = CAT[id]; return `<a class="gi" href="#/search?cat=${id}" style="background:${c.bg}"><i style="background:linear-gradient(150deg,${c.fg},${c.fg}CC)">${svg(CI[id], 22, '#fff', 2)}</i>${esc(c.label.replace('Stations-service', 'Stations service'))}</a>`; }).join('')
     + `<a class="gi" href="#/categories" style="background:#EEF0F8"><i style="background:linear-gradient(150deg,#8A90A3,#6B7185)">${svg('<circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/>', 22, '#fff', 3)}</i>Autres</a>`;
-  shell(`<div class="hero2"><img class="herophoto" src="hero.jpg" alt=""><span class="heroshade"></span><div class="in safe-top"><div class="hrow"><div class="logo" style="padding:3px"><img src="logo.png" alt="" style="height:44px"></div>
+  shell(`<div class="homec"><div class="hero2"><img class="herophoto" src="hero.jpg" alt=""><span class="heroshade"></span><div class="in safe-top"><div class="hrow"><div class="logo" style="padding:3px"><img src="logo.png" alt="" style="height:44px"></div>
     <div style="flex:1;min-width:0">${brand}<div class="tag">Découvrez, trouvez, visitez Bangui</div></div>
-    <a class="icb" href="#/messages" aria-label="Messages">${svg(I.bell, 19, '#fff')}</a><a class="icb" href="#/profil" aria-label="Profil">${svg(I.user, 19, '#fff')}</a></div>
+    <a class="icb" href="#/messages" aria-label="Messages">${svg(I.bell, 19, '#fff')}<b class="bdg" id="bdg-msg" style="display:none"></b></a><a class="icb" href="#/profil" aria-label="Profil">${svg(I.user, 19, '#fff')}</a></div>
     <div class="greet">Bonjour,<b>Trouvez un lieu à Bangui</b><i></i></div></div></div>
-    <form class="sbar2" id="sf">${svg(I.search, 20, '#142A52')}<input id="q" type="search" placeholder="Restaurant, hôtel, pharmacie, banque…" enterkeyhint="search"></form>
+    <form class="sbar2" id="sf">${svg(I.search, 20, '#142A52')}<input id="q" type="search" placeholder="Restaurant, hôtel, pharmacie, banque…" enterkeyhint="search"><button type="button" class="lb" id="loc" aria-label="Autour de moi">${svg(I.locate, 20, me0 ? '#1E6BE0' : '#142A52')}</button></form>
     <div class="grid">${cells}</div>
     <div class="zones" id="zones"></div>
-    <div id="feat"></div><div id="nearbox"></div>
+    <div id="feat"></div>
     <div class="sec"><div style="display:flex;justify-content:space-between;align-items:center"><h2 class="sh" style="margin:0">À découvrir à Bangui</h2><a href="#/search" class="more">Voir tout</a></div></div>
-    <div class="list" id="recent">${skel(4)}</div>`, 'home');
+    <div class="list" id="recent">${skel(4)}</div><div id="nearbox"></div></div>`, 'home');
+  document.getElementById('loc').onclick = async () => { if (await locate()) home(); };
   document.getElementById('sf').onsubmit = e => { e.preventDefault(); location.hash = '#/search?q=' + encodeURIComponent(document.getElementById('q').value.trim()); };
   const recent = document.getElementById('recent');
   if (!configured) { recent.innerHTML = notConfigured(); return; }
@@ -30,7 +32,7 @@ export async function home() {
       + `<a class="zc" href="#/search" aria-label="Filtres">${svg(I.sliders, 16)}</a>`;
     document.querySelectorAll('.zc[data-z]').forEach(b => b.onclick = () => { zone = b.dataset.z; draw(); });
     const list = zone === 'Tous' ? all : all.filter(p => (p.area || '').toLowerCase().includes(zone.toLowerCase()));
-    recent.innerHTML = list.length ? sortSp(list).slice(0, 12).map(rowHtml).join('') + invite() : `<div class="empty">Aucun lieu dans cette zone pour l’instant.</div>`;
+    recent.innerHTML = list.length ? (list.filter(p => !isSponsored(p)).concat(list.filter(isSponsored)).slice(0, 4)).map(rowHtml).join('') : `<div class="empty">Aucun lieu dans cette zone pour l’instant.</div>`;
     const inv = document.getElementById('inv'); if (inv) inv.onclick = async () => { try { await navigator.share({ title: 'Bangui Guide', text: 'Trouve restaurants, hôtels, pharmacies et services à Bangui avec Bangui Guide !' }); } catch { } };
   };
   draw();
@@ -47,6 +49,5 @@ export async function home() {
   const nb = document.getElementById('nearbox'), me = getPos();
   const near = all.filter(p => p._d != null).sort((a, b) => a._d - b._d).slice(0, 3);
   if (me && near.length) nb.innerHTML = `<div class="sec"><h2 class="sh">Près de vous</h2></div><div class="list" style="padding-bottom:6px">${near.map(rowHtml).join('')}</div>`;
-  else if (!me) { nb.innerHTML = `<div class="near" style="margin:0 16px 16px"><span style="flex:none">${svg(I.pin, 28, '#2A4A8A', 1.7)}</span><div style="flex:1;font-size:13px;line-height:1.35"><b>Découvrez ce qui est autour de vous</b><div style="color:#5B6075;font-size:12px;margin-top:2px">Distances et lieux les plus proches.</div></div><button class="btn" id="loc">Activer</button></div>`; document.getElementById('loc').onclick = async e => { e.target.textContent = '…'; (await locate()) ? home() : (e.target.textContent = 'Activer'); }; }
 }
 const invite = () => `<div class="invite" style="margin:6px 0 10px"><span style="flex:none">${svg(I.share, 26, '#fff', 1.7)}</span><div style="flex:1;font-size:13px;line-height:1.35"><b>Bangui Guide, c’est mieux à plusieurs</b><div style="opacity:.8;font-size:12px;margin-top:2px">Fais découvrir l’app à tes proches.</div></div><button class="btn" id="inv">Inviter</button></div>`;

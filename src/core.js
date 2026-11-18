@@ -6,7 +6,7 @@ export { sb, configured, Capacitor };
 
 export const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 export const svg = (p, s = 21, c = 'currentColor', w = 2) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
-export const PIN = '<path d="M12 21s-7-4.4-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.6-9.5 9-9.5 9Z"/><circle cx="12" cy="11" r="2"/>';
+export const PIN = '<path d="M12 21.5c-1.5-1.6-6.5-6.6-6.5-11.2a6.5 6.5 0 0 1 13 0c0 4.6-5 9.6-6.5 11.2Z"/><circle cx="12" cy="10" r="2.4"/>';
 export const I = {
   home: '<path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/>', search: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
   compass: '<circle cx="12" cy="12" r="10"/><polygon points="16.2 7.8 14.1 14.1 7.8 16.2 9.9 9.9 16.2 7.8"/>',

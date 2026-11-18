@@ -34,7 +34,7 @@ export function categories() {
 }
 
 export async function favsPage() {
-  shell(`<div class="hero safe-top" style="padding-bottom:30px"><h1 style="font-size:22px">Mes favoris</h1></div><div class="list" style="padding-top:20px" id="fl"></div>`, 'profil');
+  shell(`<div class="hero safe-top" style="padding-bottom:30px"><h1 style="font-size:22px">Mes favoris</h1></div><div class="list" style="padding-top:20px" id="fl"></div>`, 'favs');
   const ids = favs.get(), fl = document.getElementById('fl');
   if (!ids.length) { fl.innerHTML = '<div class="empty">Aucun favori. Touche le cœur sur la fiche d’un lieu pour le retrouver ici.</div>'; return; }
   if (!configured) { fl.innerHTML = notConfigured(); return; }
