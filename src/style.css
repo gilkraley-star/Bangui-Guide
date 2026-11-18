@@ -224,3 +224,24 @@ h1,h2{font-family:'Space Grotesk',sans-serif;margin:0}
 
 .lb{border:0;background:#EEF3FF;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;margin:-6px -8px -6px 0}
 .homec .sec>div{width:100%}.homec .sbar2 input{text-overflow:ellipsis}
+
+/* ===== V4 : coloré & contrasté ===== */
+html,body{background:#1B4FCB}
+.scroll{background:linear-gradient(180deg,#1D56D6 0,#2C74EA 170px,#B9D3FF 430px,#D9CCFF 100%)}
+.hero{background:linear-gradient(135deg,#0F2A6B 0,#1E5BD8 55%,#6A3FD6 100%)}
+.homec .gi{color:#fff;box-shadow:0 8px 16px rgba(10,30,90,.28)}
+.homec .gi i{box-shadow:0 3px 8px rgba(0,0,0,.25);width:32px;height:32px}.homec .gi i svg{width:19px;height:19px}
+.homec .sbar2{box-shadow:0 12px 28px rgba(10,30,90,.38)}
+.zc{background:#fff;border:0;color:#142A52;box-shadow:0 3px 8px rgba(10,30,90,.18)}.zc.on{background:linear-gradient(135deg,#FF8A1F,#E2411B);color:#fff}.zc.on svg{stroke:#fff}
+.homec .sec h2{color:#0F2A6B}.homec .sec .more{background:#142A52;color:#fff;box-shadow:0 3px 8px rgba(10,30,90,.25)}
+.row2{background:linear-gradient(95deg,color-mix(in srgb,var(--cf,#2A7DE0) 20%,#fff),#fff 62%);border-left:6px solid var(--cf,#2A7DE0);box-shadow:0 6px 16px rgba(20,30,90,.16)}
+.row2.sp{background:linear-gradient(95deg,#FFE3C2,#FFF6EA 70%);border-left-color:#FF7A1A;box-shadow:0 0 0 2px #FF9A3D,0 8px 18px rgba(226,84,31,.25)}
+.row2 .nm{color:#0F2A6B}
+.nav{background:#0F2A6B;box-shadow:0 12px 30px rgba(5,15,60,.55)}
+.nav a{color:#9FB4EA}.nav a.on{background:linear-gradient(135deg,#FF8A1F,#E2411B);color:#fff}
+.banner{box-shadow:0 10px 24px rgba(30,10,60,.35)}
+.dots i{background:rgba(255,255,255,.55)}.dots i.on{background:#FFC21F}
+.pcard,.card2,.card{box-shadow:0 8px 20px rgba(20,30,90,.18)}
+.dtop{background:linear-gradient(135deg,#0F2A6B 0,#1E5BD8 60%,#6A3FD6 100%)}
+.sheet2{background:linear-gradient(180deg,#EAF2FF,#F3EDFF)}
+.tabs{box-shadow:0 6px 16px rgba(20,30,90,.15)}.tabs .on{background:linear-gradient(135deg,#1E5BD8,#6A3FD6)!important}
