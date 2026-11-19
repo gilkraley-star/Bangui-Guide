@@ -110,3 +110,28 @@ export async function uploadPhoto(uid, dataUrl) {
   if (up.error) throw up.error;
   return sb.storage.from('place-photos').getPublicUrl(path).data.publicUrl;
 }
+
+/* ----- v3 : stats, ouvert maintenant, WhatsApp, cache hors connexion ----- */
+export const logEvent = (id, kind) => { if (configured) sb.from('place_events').insert({ place_id: id, kind }).then(() => { }, () => { }); };
+export const waLink = (phone, text) => { const n = (phone || '').replace(/[^\d]/g, ''); return n ? `https://wa.me/${n}${text ? '?text=' + encodeURIComponent(text) : ''}` : ''; };
+const DAYS = { lun: 1, mar: 2, mer: 3, jeu: 4, ven: 5, sam: 6, dim: 0 };
+/* true / false / null (inconnu) à partir d'un texte comme « Lun–Sam 8h–19h ; Dim 9h–13h » ou « 24h/24 » */
+export function openNow(h, now = new Date()) {
+  if (!h) return null; const s = h.toLowerCase();
+  if (/24\s*h?\s*(\/|sur)\s*24|24h|24\/7|7j\/7 24/.test(s) && !/\d{1,2}\s*h?\s*[–-]\s*\d/.test(s.replace(/24\s*h/g, ''))) return true;
+  const d = now.getDay(), m = now.getHours() * 60 + now.getMinutes(); let known = false;
+  for (const seg of s.split(/[;,\n]|\s\/\s/)) {
+    const t = seg.match(/(\d{1,2})\s*h\s*(\d{2})?\s*(?:[–-]|à|a)\s*(\d{1,2})\s*h?\s*(\d{2})?/); if (!t) continue; known = true;
+    let days = [0, 1, 2, 3, 4, 5, 6]; const dm = seg.match(/(lun|mar|mer|jeu|ven|sam|dim)\w*\s*(?:[–-]|à|au)\s*(lun|mar|mer|jeu|ven|sam|dim)/);
+    if (dm) { const a = DAYS[dm[1]], b = DAYS[dm[2]]; days = []; for (let i = a; ; i = (i + 1) % 7) { days.push(i); if (i === b) break; } }
+    else { const one = seg.match(/(lun|mar|mer|jeu|ven|sam|dim)/); if (one) days = [DAYS[one[1]]]; }
+    if (!days.includes(d)) continue;
+    const a = +t[1] * 60 + +(t[2] || 0), b = +t[3] * 60 + +(t[4] || 0);
+    if (b > a ? m >= a && m < b : m >= a || m < b) return true;
+  }
+  return known ? false : null;
+}
+export async function cachedQuery(key, run) {
+  try { const r = await run(); if (!r.error) { try { localStorage.setItem('bgc_' + key, JSON.stringify(r.data)); } catch { } return r; } throw r.error; }
+  catch (e) { try { const d = JSON.parse(localStorage.getItem('bgc_' + key) || 'null'); if (d) return { data: d, error: null, stale: true }; } catch { } return { data: null, error: e }; }
+}

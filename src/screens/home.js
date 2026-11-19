@@ -1,9 +1,9 @@
-import { esc, svg, I, CI, sb, configured, withDist, getPos, locate, attachStats, sortSp, isSponsored, toast } from '../core.js';
-import { CATS, CAT } from '../data.js';
+import { esc, svg, I, CI, sb, configured, withDist, getPos, locate, attachStats, cachedQuery, sortSp, isSponsored, toast } from '../core.js';
+import { CATS, CAT, QUARTIERS } from '../data.js';
 import { shell, brand, rowHtml, skel, errBox, notConfigured, photoBox, spBadge, stars, onLeave } from '../ui.js';
 
 const GRID = ['restaurant', 'hotel', 'pharmacie', 'banque', 'hopital', 'culte', 'commerce', 'admin', 'station'];
-const ZONES = ['Tous', 'Centre-ville', 'Km5', 'Koudoukou'];
+const ZONES = ['Tous', ...QUARTIERS.filter(z => z !== 'Autre')];
 
 const CIRC = new Set(['restaurant', 'pharmacie']);
 const ICC = { restaurant: '#F26A1B', hotel: '#1B2F6B', pharmacie: '#1FA34A', banque: '#2A3A8A', hopital: '#E5322D', culte: '#5B2D8A', commerce: '#F28A1E', admin: '#1B2F6B', station: '#1B2F6B' };
@@ -26,7 +26,8 @@ export async function home() {
   document.getElementById('sf').onsubmit = e => { e.preventDefault(); location.hash = '#/search?q=' + encodeURIComponent(document.getElementById('q').value.trim()); };
   const recent = document.getElementById('recent');
   if (!configured) { recent.innerHTML = notConfigured(); return; }
-  const { data, error } = await sb.from('places').select('*').eq('status', 'published').order('created_at', { ascending: false }).limit(60);
+  const { data, error, stale } = await cachedQuery('home', () => sb.from('places').select('*').eq('status', 'published').order('created_at', { ascending: false }).limit(60));
+  if (stale) toast('Hors connexion : données enregistrées');
   if (error) { recent.innerHTML = errBox(error); return; }
   const all = withDist(await attachStats(data));
   let zone = 'Tous';

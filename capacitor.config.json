@@ -1,1 +1,18 @@
-{"appId":"cf.banguiguide.app","appName":"Bangui Guide","webDir":"dist","backgroundColor":"#F7F8FB","android":{"allowMixedContent":false}}
+{
+  "appId": "cf.banguiguide.app",
+  "appName": "Bangui Guide",
+  "webDir": "dist",
+  "backgroundColor": "#F7F8FB",
+  "android": {
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1200,
+      "launchAutoHide": false,
+      "backgroundColor": "#0B1F55",
+      "showSpinner": false,
+      "androidScaleType": "CENTER_INSIDE"
+    }
+  }
+}

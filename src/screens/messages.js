@@ -1,6 +1,8 @@
 import { esc, svg, I, sb, configured, getProfile, fmtTime, toast } from '../core.js';
 import { $app, shell, skel, errBox, notConfigured, photoBox, onLeave, refreshBadge } from '../ui.js';
 
+const STAT = { nouvelle: ['Nouvelle', '#EAF1FF', '#2A4A8A'], confirmee: ['Confirmée', '#E7F7EC', '#1E7A43'], refusee: ['Refusée', '#FFE9E7', '#C23B3B'], traitee: ['Traitée', '#F1F2F6', '#3A3F52'] };
+const stPill = k => { const t = STAT[k] || STAT.nouvelle; return `<span class="ostat" style="background:${t[1]};color:${t[2]}">${t[0]}</span>`; };
 export async function messages() {
   shell(`<div class="hero safe-top" style="padding-bottom:30px"><div style="display:flex;gap:12px;align-items:center"><span class="icb" style="width:46px;height:46px">${svg(I.msg, 22, '#fff')}</span><div><h1 style="font-size:23px">Messages</h1><div style="font-size:12.5px;opacity:.85">Vos conversations avec les établissements</div></div></div></div>
     <div class="ch" style="padding-top:18px" id="ch"></div><div class="list hz" id="cl">${skel(3)}</div>`, 'msg');
@@ -19,7 +21,7 @@ export async function messages() {
     document.getElementById('ch').innerHTML = `<button class="${only ? '' : 'on'}" data-f="all">Tous ${convs.length ? `<b>${convs.length}</b>` : ''}</button><button class="${only ? 'on' : ''}" data-f="unread">Non lus ${total ? `<b>${total}</b>` : ''}</button>`;
     document.querySelectorAll('#ch button').forEach(b => b.onclick = () => { only = b.dataset.f === 'unread'; draw(); });
     const list = convs.filter(c => !only || cnt[c.id]);
-    cl.innerHTML = list.length ? list.map(c => { const pl = c.places || {}, mineConv = c.user_id === prof.uid; return `<a class="cv" href="#/chat/${c.id}"><div class="av">${photoBox({ name: pl.name, category: pl.category, photo_url: pl.photo_url }, '', 24)}</div><div class="bd"><div style="display:flex;justify-content:space-between;gap:8px"><b style="font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(mineConv ? pl.name : (c.user_name || 'Client') + ' · ' + (pl.name || ''))}</b><span class="sub" style="margin:0;flex:none">${fmtTime(c.last_at)}</span></div><div class="lm">${esc(c.last_message || 'Nouvelle conversation')}</div></div>${cnt[c.id] ? `<span class="ub">${cnt[c.id]}</span>` : ''}</a>`; }).join('')
+    cl.innerHTML = list.length ? list.map(c => { const pl = c.places || {}, mineConv = c.user_id === prof.uid; return `<a class="cv" href="#/chat/${c.id}"><div class="av">${photoBox({ name: pl.name, category: pl.category, photo_url: pl.photo_url }, '', 24)}</div><div class="bd"><div style="display:flex;justify-content:space-between;gap:8px"><b style="font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(mineConv ? pl.name : (c.user_name || 'Client') + ' · ' + (pl.name || ''))}</b><span class="sub" style="margin:0;flex:none">${fmtTime(c.last_at)}</span></div><div class="lm">${stPill(c.status)} ${esc(c.last_message || 'Nouvelle conversation')}</div></div>${cnt[c.id] ? `<span class="ub">${cnt[c.id]}</span>` : ''}</a>`; }).join('')
       : `<div class="empty">${only ? 'Aucun message non lu.' : 'Aucune conversation. Ouvre la fiche d’un lieu et touche « Écrire ».'}</div>`;
   };
   draw();
@@ -36,6 +38,10 @@ export async function chat(id) {
   const { data: cv, error } = await sb.from('conversations').select('*, places(name)').eq('id', id).maybeSingle();
   if (error || !cv) { document.getElementById('cm').innerHTML = '<div class="empty">Conversation introuvable.</div>'; return; }
   document.getElementById('ct').textContent = cv.user_id === prof.uid ? (cv.places?.name || 'Établissement') : (cv.user_name || 'Client');
+  const ownerView = cv.user_id !== prof.uid;
+  const sbar = document.createElement('div'); sbar.className = 'stbar';
+  const drawSt = () => { sbar.innerHTML = ownerView ? `<span>Demande : ${stPill(cv.status)}</span><button data-s="confirmee">Confirmer</button><button data-s="refusee">Refuser</button><button data-s="traitee">Traitée</button>` : `<span>Statut de votre demande : ${stPill(cv.status)}</span>`; sbar.querySelectorAll('button').forEach(b => b.onclick = async () => { const { error } = await sb.rpc('set_conv_status', { c: id, s: b.dataset.s }); if (error) { toast('Erreur : ' + error.message); return; } cv.status = b.dataset.s; drawSt(); toast('Statut mis à jour'); }); };
+  drawSt(); document.getElementById('scroll').before(sbar);
   const box = document.getElementById('cm'), sc = document.getElementById('scroll'); const seen = new Set();
   const add = m => { if (seen.has(m.id)) return; seen.add(m.id); const em0 = box.querySelector('.empty'); if (em0) em0.remove(); const me = m.sender_id === prof.uid; const d = document.createElement('div'); d.className = 'bub ' + (me ? 'me' : 'th'); d.innerHTML = `${esc(m.body)}<small>${fmtTime(m.created_at)}</small>`; box.appendChild(d); last = m.created_at; };
   let last = null;

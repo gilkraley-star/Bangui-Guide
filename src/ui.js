@@ -1,4 +1,4 @@
-import { esc, svg, I, PIN, catPath, sb, configured, fmtD, isSponsored, getProfile } from './core.js';
+import { esc, svg, I, PIN, catPath, sb, configured, fmtD, isSponsored, getProfile, openNow } from './core.js';
 import { CAT } from './data.js';
 export const $app = document.getElementById('app');
 
@@ -50,9 +50,9 @@ export const brand = `<span class="wm">Bangui <i>Guide</i></span>`;
 export function rowHtml(p) {
   const c = CAT[p.category], sp = isSponsored(p);
   return `<a class="row2 ${sp ? 'sp' : ''}" href="#/place/${p.id}" style="--cf:${c?.fg || '#8A90A3'}">${photoBox(p, 'th2', 26, true)}<div class="bd">
-    <span class="nm">${esc(p.name)}</span>
+    <span class="nm">${esc(p.name)}${(() => { const o = p.on_duty ? true : openNow(p.hours); return o == null ? '' : `<i class="dot ${o ? 'on' : 'off'}" aria-label="${p.on_duty ? 'De garde' : o ? 'Ouvert' : 'Fermé'}"></i>`; })()}</span>
     <div class="sub" style="margin:0"><span style="color:${c?.fg || '#8A90A3'};font-weight:600">${esc(c?.label || p.category)}</span>${p.area ? ' · ' + esc(p.area) : ''}</div>
-    <div class="tags">${sp ? spBadge() : ''}${p.verified ? `<span class="pill" style="background:#EAF8EF;color:#1E7A43">${svg(I.check, 10, '#1E7A43', 3)} Vérifié</span>` : ''}</div></div>
+    <div class="tags">${sp ? spBadge() : ''}${p.on_duty ? '<span class="pill" style="background:#E7F7EC;color:#1E7A43">De garde</span>' : ''}${p.verified ? `<span class="pill" style="background:#EAF8EF;color:#1E7A43">${svg(I.check, 10, '#1E7A43', 3)} Vérifié</span>` : ''}</div></div>
     <div class="rt">${p._d != null ? `<span class="dist">${svg(PIN, 12, '#E2541F', 2.4)} ${fmtD(p._d)}</span>` : ''}<span class="rt2">★ ${p._r != null ? Number(p._r).toFixed(1) : 'Nouveau'}${p._r != null && p._n ? `<i>(${p._n})</i>` : ''}</span><span class="chv" style="color:#9AA0B4">${svg(I.chev, 18)}</span></div></a>`;
 }
 
