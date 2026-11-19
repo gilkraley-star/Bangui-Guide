@@ -18,7 +18,8 @@ const FALLBACK = [['mairie', 'img/mairie.jpg', 'img/mairie-hero.jpg'], ['cath', 
 const ITEMPH = [['poulet', 'plat-poulet'], ['bœuf', 'plat-boeuf'], ['boeuf', 'plat-boeuf'], ['poisson', 'plat-poisson'], ['standard', 'chambre-standard'], ['confort', 'chambre-confort'], ['suite', 'suite'], ['portable', 'prod-pc'], ['smartphone', 'prod-phone'], ['imprimante', 'prod-imprimante']];
 const fb = p => FALLBACK.find(([k]) => (p.name || '').toLowerCase().includes(k));
 export const photoOf = p => p.photo_url || fb(p)?.[1] || null;
-export const heroOf = p => p.photo_url || fb(p)?.[2] || fb(p)?.[1] || null;
+const SECHERO = { hotel: 'h-hotel', restaurant: 'h-resto', pharmacie: 'h-pharma', commerce: 'h-shop', hopital: 'h-hopital', universite: 'h-univ', banque: 'h-banque', admin: 'h-mairie', transport: 'h-auto', btp: 'h-btp', station: 'h-station', voyage: 'h-voyage' };
+export const heroOf = p => p.photo_url || fb(p)?.[2] || fb(p)?.[1] || (SECHERO[p.category] ? `img/${SECHERO[p.category]}.jpg` : null);
 export const itemPhoto = it => it.photo_url || ((k) => k ? `img/${k[1]}.jpg` : null)(ITEMPH.find(([w]) => (it.name || '').toLowerCase().includes(w)));
 export function photoBox(p, cls = '', icon = 28, hero = false) {
   const c = CAT[p.category] || { fg: '#8A90A3', bg: '#F1F2F6' };

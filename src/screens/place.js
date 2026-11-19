@@ -1,23 +1,8 @@
 import { esc, svg, I, CI, PIN, catPath, sb, configured, getProfile, requireLogin, favs, toast, fmtPrice, withDist, attachStats, isSponsored, fmtD, logEvent, waLink, openNow } from '../core.js';
 import { CAT } from '../data.js';
+import { sectorBody, statusRow, heroCarousel, CTAS, ctaIcon, TABNAME, ABOUT } from '../sector.js';
 import { $app, onLeave, photoBox, itemPhoto, heroOf, spBadge, stars, errBox, notConfigured, brand, plain, topbar, bindBack, rowHtml } from '../ui.js';
 
-const ITEM = { restaurant: ['Menu', 'restaurant'], hotel: ['Chambres', 'hotel'], commerce: ['Produits', 'commerce'], pharmacie: ['Produits', 'pharmacie'], ecole: ['Niveaux', 'ecole'], universite: ['Filières', 'universite'], voyage: ['Vols', 'voyage'], garage: ['Services', 'garage'], salon: ['Services', 'salon'], banque: ['Services', 'banque'], hopital: ['Services', 'hopital'], transport: ['Tarifs', 'transport'], btp: ['Services', 'btp'], station: ['Services', 'station'] };
-const CTA = {
-  hotel: ['Demander une réservation', 'Bonjour, je souhaite réserver une chambre.\nDates : \nNombre de personnes : '],
-  restaurant: ['Réserver une table', 'Bonjour, je souhaite réserver une table.\nDate et heure : \nNombre de personnes : '],
-  hopital: ['Appeler maintenant', null, 'Ou prendre rendez-vous (non urgent)', 'Bonjour, je souhaite prendre rendez-vous.\nSpécialité : \nDate souhaitée : '],
-  pharmacie: ['Appeler maintenant', null],
-  garage: ['Prendre rendez-vous', 'Bonjour, je souhaite un rendez-vous pour mon véhicule.\nProblème : \nDate souhaitée : '],
-  salon: ['Prendre rendez-vous', 'Bonjour, je souhaite un rendez-vous.\nService : \nDate et heure : '],
-  banque: ['Prendre rendez-vous', 'Bonjour, je souhaite un rendez-vous.\nMotif : \nDate souhaitée : '],
-  transport: ['Commander une course', 'Bonjour, je souhaite une course.\nDépart : \nDestination : \nHeure : '],
-  universite: ['Demander une inscription', 'Bonjour, je souhaite m’inscrire.\nFilière : \nNiveau : '],
-  ecole: ['Demander une inscription', 'Bonjour, je souhaite inscrire mon enfant.\nNiveau : \nRentrée : '],
-  voyage: ['Demander une réservation', 'Bonjour, je souhaite réserver un voyage.\nDestination : \nDates : '],
-  btp: ['Demander un devis', 'Bonjour, je souhaite un devis.\nProjet : \nBudget : '],
-  commerce: ['Passer commande', 'Bonjour, je souhaite commander :\n']
-};
 const BADGE = /24|garde|urgence|inscription|disponible|ouvert/i;
 const TAG_ICON = {
   'Wi-Fi': '<path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><path d="M12 20h.01"/>',
@@ -45,9 +30,9 @@ export async function place(id) {
   const its = items.data || [], reviews = revs.data || [];
   const n = reviews.length, avg = n ? reviews.reduce((s, r) => s + r.rating, 0) / n : null;
   const c = CAT[p.category] || { fg: '#3A3F52', bg: '#F1F2F6', label: p.category }, isFav = favs.get().includes(p.id), sp = isSponsored(p);
-  const itemInfo = ITEM[p.category], tabs = [];
-  if (itemInfo) tabs.push(['items', itemInfo[0], CI[itemInfo[1]]]);
-  tabs.push(['about', 'À propos', I.info], ['reviews', 'Avis', I.star], ['photos', 'Photos', I.img], ['infos', 'Infos', I.pin]);
+  const itemInfo = [TABNAME[p.category] || 'Services'], tabs = [];
+  tabs.push(['items', itemInfo[0], CI[p.category] || I.info]);
+  tabs.push(['about', ABOUT[p.category] || 'À propos', I.info], ['reviews', 'Avis', I.star], ['photos', 'Photos', I.img], ['infos', 'Infos', I.pin]);
   if (prof && (prof.role === 'admin' || p.owner_id === prof.uid)) tabs.push(['admin', 'Gérer', I.edit]);
   let tab = tabs[0][0];
   const hasGps = p.lat != null && p.lng != null;
@@ -57,16 +42,11 @@ export async function place(id) {
   const mine = prof && reviews.find(r => r.user_id === prof.uid);
   const canManage = prof && (prof.role === 'admin' || p.owner_id === prof.uid);
 
-  const cta = CTA[p.category], tel = p.phone ? p.phone.replace(/[^\d+]/g, '') : '';
-  const ctaHtml = cta ? `<div class="cta">${cta[1] === null ? (tel ? `<a class="btn" href="tel:${esc(tel)}">${svg(I.phone, 18, '#fff')} ${cta[0]}</a>` : '') : `<button class="btn" id="cta">${cta[0]}</button>`}${cta[2] ? `<button class="lnk" id="cta2">${cta[2]}</button>` : ''}</div>` : '';
-  const itemsHtml = () => {
-    if (!its.length) return `<div class="card2"><div class="empty" style="padding:20px">${itemInfo?.[0] || 'Contenu'} à venir. L’établissement n’a pas encore ajouté d’éléments.</div></div>`;
-    const cards = ['hotel', 'commerce', 'pharmacie'].includes(p.category);
-    const th = it => itemPhoto(it) ? `<div style="background:center/cover url('${esc(itemPhoto(it))}')"></div>` : photoBox({ category: p.category }, '', 30);
-    if (!cards) return `<div class="card2 tlist"><div class="sh">${(itemInfo?.[0] || 'Services') === 'Tarifs' ? 'Tarifs' : (itemInfo?.[0] || 'Services') + ' & tarifs'}</div>${its.map(it => `<div class="trow ${it.available === false ? 'soldout' : ''}">${itemPhoto(it) ? `<div class="tth" style="background:center/cover url('${esc(itemPhoto(it))}')"></div>` : ''}<div style="min-width:0;flex:1"><b>${esc(it.name)}</b>${it.description ? `<div class="sub" style="margin:1px 0 0">${esc(it.description)}</div>` : ''}</div><span class="pr">${esc(fmtPrice(it.price, it.unit))}</span></div>`).join('')}</div>`;
-    return cards ? `<div class="icards">${its.map(it => `<div class="icd ${it.available === false ? 'soldout' : ''}"><div class="ti">${th(it)}</div><div class="tx"><b style="font-size:14px">${esc(it.name)}</b><div class="pr" style="color:#E2541F;font-weight:800;margin-top:3px">${esc(fmtPrice(it.price, it.unit))}</div></div></div>`).join('')}</div>`
-      : `<div class="card2 itmwrap">${its.map(it => `<div class="itm ${it.available === false ? 'soldout' : ''}"><div class="ti">${th(it)}</div><div style="flex:1;min-width:0"><b>${esc(it.name)}</b>${it.description ? `<div class="sub" style="margin:2px 0 0">${esc(it.description)}</div>` : ''}</div><span class="pr">${esc(fmtPrice(it.price, it.unit))}</span></div>`).join('')}</div>`;
-  };
+  const cta = CTAS[p.category] || ['Écrire un message', 'cal', 'chat', null], tel = p.phone ? p.phone.replace(/[^\d+]/g, '') : '';
+  const ctaHtml = cta[4] ? '' : `<div class="cta">${cta[2] === 'tel' ? (tel ? `<a class="btn" id="ctaTel" href="tel:${esc(tel)}">${svg(ctaIcon(cta[1]), 20, '#fff', 2)} ${cta[0]}</a>` : '') : cta[2] === 'dir' ? `<button class="btn" id="ctaDir">${svg(ctaIcon(cta[1]), 20, '#fff', 2)} ${cta[0]}</button>` : `<button class="btn" id="cta">${svg(ctaIcon(cta[1]), 20, '#fff', 2)} ${cta[0]}</button>`}${cta[5] ? `<button class="lnk" id="cta2">${cta[5]}</button>` : ''}</div>`;
+  let showAll = false;
+  const itemsHtml = () => sectorBody(p, its, { all: showAll });
+  const gallery = [...new Set([heroOf(p), ...(p.photos || []), ...its.map(itemPhoto)].filter(Boolean))];
   const row = (ic, tx, label) => tx ? `<div class="irow"><span class="ic">${svg(ic, 18, '#E2541F')}</span><div><div class="il">${label}</div><div class="iv">${esc(tx)}</div></div></div>` : '';
   const views = {
     items: itemsHtml,
@@ -77,7 +57,7 @@ export async function place(id) {
       <div class="card2"><div class="sh">${mine ? 'Modifier mon avis' : 'Donner mon avis'}</div>${prof ? `<div class="starpick" id="sp">${[1, 2, 3, 4, 5].map(i => `<button data-v="${i}" aria-label="${i} étoiles">${svg(I.star, 30, '#FFB020', 1.6).replace('fill="none"', `fill="${(mine?.rating || 0) >= i ? '#FFB020' : 'none'}"`)}</button>`).join('')}</div>
         <div class="field" style="margin-bottom:10px"><textarea id="rc" maxlength="1000" placeholder="Votre commentaire (facultatif)">${esc(mine?.comment || '')}</textarea></div><button class="btn" id="rs">Publier</button>` : `<button class="btn sec2" id="rl">Se connecter pour donner son avis</button>`}</div>
       ${reviews.length ? `<div class="card2 rvwrap">${reviews.map(r => `<div class="rv"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:14px">${esc(r.author || 'Utilisateur')}</b>${stars(r.rating, 13)}</div>${r.comment ? `<p style="font-size:13.5px;color:#3A3F52;line-height:1.5;margin:6px 0 0">${esc(r.comment)}</p>` : ''}${r.owner_reply ? `<div class="rply"><b>Réponse de l’établissement</b><div>${esc(r.owner_reply)}</div></div>` : ''}${canManage ? `<button class="lnk" data-rr="${r.id}" style="margin-top:6px">${r.owner_reply ? 'Modifier ma réponse' : 'Répondre'}</button>` : ''}</div>`).join('')}</div>` : ''}`,
-    photos: () => { const ph = [heroOf(p), ...its.map(itemPhoto)].filter(Boolean); return ph.length ? `<div class="photos">${ph.map(u => `<div style="background:center/cover url('${esc(u)}')"></div>`).join('')}</div>` : `<div class="card2"><div class="empty" style="padding:20px">Pas encore de photos pour ce lieu.</div></div>`; },
+    photos: () => { const ph = gallery; return ph.length ? `<div class="photos">${ph.map(u => `<div style="background:center/cover url('${esc(u)}')"></div>`).join('')}</div>` : `<div class="card2"><div class="empty" style="padding:20px">Pas encore de photos pour ce lieu.</div></div>`; },
     admin: () => `${admin}${canManage ? `<a class="card2" style="display:flex;align-items:center;gap:10px;font-weight:700" href="#/manage/${id}">${svg(I.edit, 18)} Modifier les informations, le menu et les photos</a>` : ''}`,
     infos: () => `<div class="card2">${row(I.pin, p.address || p.area, 'ADRESSE')}${row(I.clock, p.hours, 'HORAIRES')}${row(I.phone, p.phone, 'TÉLÉPHONE')}${!p.address && !p.area && !p.hours && !p.phone ? '<div class="sub">Informations à compléter par l’établissement.</div>' : ''}</div>
       ${p.tags?.length ? `<div class="card2"><div class="sh">Services</div><div class="svc">${p.tags.map(tagChip).join('')}</div></div>` : ''}
@@ -94,6 +74,8 @@ export async function place(id) {
     document.getElementById('tabc').innerHTML = views[tab]();
     document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => { tab = b.dataset.k; draw(); });
     bindAdmin();
+    document.querySelectorAll('#tabc [data-all]').forEach(b => b.onclick = () => { showAll = b.dataset.all === '1'; draw(); });
+    const c1 = document.querySelector('#tabc #cta'); if (c1) c1.onclick = e => openChat(e.currentTarget, cta[3]);
     const ml = document.getElementById('mapl'); if (ml) ml.onclick = e => { e.preventDefault(); window.open(url, '_system'); };
     document.querySelectorAll('[data-rr]').forEach(b => b.onclick = () => {
       const old = reviews.find(r => r.id === b.dataset.rr)?.owner_reply || '';
@@ -108,15 +90,14 @@ export async function place(id) {
       rs.onclick = async () => { if (!val) { toast('Choisis une note'); return; } rs.disabled = true; const { error } = await sb.from('reviews').upsert({ place_id: id, user_id: prof.uid, rating: val, comment: document.getElementById('rc').value.trim() || null }, { onConflict: 'place_id,user_id' }); if (error) { toast('Erreur : ' + error.message); rs.disabled = false; } else { toast('Merci pour votre avis'); place(id); } };
     }
   };
-  $app.innerHTML = `<div class="scroll nov" id="scroll"><div class="dtop"><div class="dbar"><button class="back" id="back" aria-label="Retour">${svg(I.back, 20)}</button><span style="display:flex;align-items:center;gap:6px"><img src="logo.png" alt="" style="height:30px;border-radius:8px;background:#fff;padding:1px">${brand}</span>
+  $app.innerHTML = `<div class="scroll fiche" id="scroll"><div class="dtop"><div class="dbar"><button class="back" id="back" aria-label="Retour">${svg(I.back, 20)}</button><span style="display:flex;align-items:center;gap:6px"><img src="logo.png" alt="" style="height:30px;border-radius:8px;background:#fff;padding:1px">${brand}</span>
       <div style="display:flex;gap:8px"><button class="back" id="fav" aria-label="Favori">${svg(I.heart, 19, isFav ? '#E2541F' : '#142A52').replace('fill="none"', isFav ? 'fill="#E2541F"' : 'fill="none"')}</button><button class="back" id="shr" aria-label="Partager">${svg(I.share, 18)}</button></div></div>
-      <div class="dph">${photoBox(p, '', 56, true)}${sp ? spBadge(true) : ''}</div></div>
+      ${heroCarousel(gallery.slice(0, 6), sp ? spBadge(true) : '') || `<div class="dph">${photoBox(p, '', 56, true)}${sp ? spBadge(true) : ''}</div>`}</div>
     <div class="sheet2"><div style="display:flex;gap:14px;align-items:center"><div class="ib" style="background:linear-gradient(150deg,${c.fg},${c.fg}BB)">${svg(catPath(p.category), 38, '#fff', 1.8)}</div>
       <div style="min-width:0;flex:1"><span class="pill" style="background:${c.bg};color:${c.fg}">${esc(c.label)}</span>${p.verified ? ' <span class="pill" style="background:#EAF8EF;color:#1E7A43">✓ Vérifié</span>' : ''}${(p.tags || []).filter(t => BADGE.test(t)).map(t => ` <span class="pill" style="background:#E7F7EC;color:#168A3C">${esc(t)}</span>`).join('')}
       <h1 style="font-size:23px;line-height:1.15;margin:6px 0 4px">${esc(p.name)}</h1><div class="sub" style="margin:0;display:flex;gap:5px;align-items:center">${svg(PIN, 15, '#1E2A78', 2)} ${esc(p.area || 'Bangui')}</div></div></div>
       ${avg != null ? `<div style="display:flex;gap:8px;align-items:center;margin-top:10px"><b style="font-size:18px">${avg.toFixed(1).replace('.', ',')}</b>${stars(avg, 17)}<span class="sub" style="margin:0">(${n} avis)</span></div>` : ''}
-      ${op != null ? `<div style="margin-top:8px"><span class="stt ${op ? 'on' : 'off'}"><i></i>${p.on_duty ? 'De garde aujourd’hui' : op ? 'Ouvert maintenant' : 'Fermé actuellement'}</span></div>` : ''}
-      ${p.description ? `<p class="dsc">${esc(p.description)}</p>` : ''}
+      ${statusRow(p)}
       <div class="acts">${p.phone ? `<a class="btn" id="call" style="flex:1.2" href="tel:${esc(p.phone.replace(/[^\d+]/g, ''))}">${svg(I.phone, 18, '#fff')} Appeler</a><button class="btn wa" id="wab" aria-label="WhatsApp" style="flex:none;width:50px;padding:0">${svg('<path d="M3 21l1.6-5A9 9 0 1 1 8 19.4z"/><path d="M9 9c0 3 3 6 6 6l1.4-1.6-2-1-1 .8c-1-.4-2-1.4-2.4-2.4l.8-1-1-2z"/>', 22, '#fff', 1.9)}</button>` : ''}<button class="btn sec2" id="wr" style="flex:1">${svg(I.msg, 18, '#2A4A8A')} Écrire</button><button class="btn sec2" id="dir" style="flex:1.1">${svg(I.nav, 18, '#2A4A8A')} Itinéraire</button></div>
       <div class="tabs" id="tabs"></div><div id="tabc"></div>${ctaHtml}</div></div>`;
   bindBack(); draw();
@@ -132,8 +113,11 @@ export async function place(id) {
     location.hash = '#/chat/' + cv.id;
   };
   document.getElementById('wr').onclick = e => openChat(e.currentTarget, null);
-  if (document.getElementById('cta')) document.getElementById('cta').onclick = e => openChat(e.currentTarget, cta[1]);
-  if (document.getElementById('cta2')) document.getElementById('cta2').onclick = e => openChat(e.currentTarget, cta[3]);
+  if (document.getElementById('cta')) document.getElementById('cta').onclick = e => openChat(e.currentTarget, cta[3]);
+  const cd = document.getElementById('ctaDir'); if (cd) cd.onclick = () => { logEvent(id, 'route'); window.open(url, '_system'); };
+  const ct = document.getElementById('ctaTel'); if (ct) ct.addEventListener('click', () => logEvent(id, 'call'));
+  const cs = document.getElementById('cs'); if (cs) cs.onscroll = () => { const k = Math.round(cs.scrollLeft / cs.clientWidth); document.querySelectorAll('#cdots i').forEach((d, j) => d.classList.toggle('on', j === k)); const cc = document.getElementById('ccnt'); if (cc) cc.lastChild.textContent = ` ${k + 1}/${gallery.slice(0, 6).length}`; };
+  if (document.getElementById('cta2')) document.getElementById('cta2').onclick = e => openChat(e.currentTarget, cta[6]);
   document.getElementById('fav').onclick = () => { const a = favs.get(), i = a.indexOf(p.id); i >= 0 ? a.splice(i, 1) : a.push(p.id); favs.set(a); toast(i >= 0 ? 'Retiré des favoris' : 'Ajouté aux favoris'); place(id); };
   document.getElementById('shr').onclick = async () => { const text = `${p.name} — ${p.address || p.area || 'Bangui'} (Bangui Guide)`; try { navigator.share ? await navigator.share({ title: p.name, text, url }) : (await navigator.clipboard.writeText(text + ' ' + url), toast('Copié')); } catch { } };
   bindAdmin = () => {
