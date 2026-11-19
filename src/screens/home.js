@@ -34,7 +34,7 @@ export async function home() {
       + `<a class="zc" href="#/search" aria-label="Filtres">${svg(I.sliders, 16)}</a>`;
     document.querySelectorAll('.zc[data-z]').forEach(b => b.onclick = () => { zone = b.dataset.z; draw(); });
     const list = zone === 'Tous' ? all : all.filter(p => (p.area || '').toLowerCase().includes(zone.toLowerCase()));
-    recent.innerHTML = list.length ? (list.filter(p => !isSponsored(p)).concat(list.filter(isSponsored)).slice(0, 4)).map(rowHtml).join('') : `<div class="empty">Aucun lieu dans cette zone pour l’instant.</div>`;
+    recent.innerHTML = list.length ? (list.filter(p => !isSponsored(p)).concat(list.filter(isSponsored)).slice(0, 5)).map(rowHtml).join('') : `<div class="empty">Aucun lieu dans cette zone pour l’instant.</div>`;
     const inv = document.getElementById('inv'); if (inv) inv.onclick = async () => { try { await navigator.share({ title: 'Bangui Guide', text: 'Trouve restaurants, hôtels, pharmacies et services à Bangui avec Bangui Guide !' }); } catch { } };
   };
   draw();
