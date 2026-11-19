@@ -7,13 +7,13 @@ const ZONES = ['Tous', 'Centre-ville', 'Km5', 'Koudoukou'];
 
 export async function home() {
   const me0 = getPos();
-  const cells = GRID.map(id => { const c = CAT[id]; return `<a class="gi" href="#/search?cat=${id}" style="background:linear-gradient(160deg,${c.fg},${c.fg}CC)"><i style="background:#fff">${svg(CI[id], 22, c.fg, 2.2)}</i>${esc(c.label.replace('Stations-service', 'Stations service'))}</a>`; }).join('')
-    + `<a class="gi" href="#/categories" style="background:linear-gradient(160deg,#5B6A92,#3C4A73)"><i style="background:#fff">${svg('<circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/>', 22, '#3C4A73', 3)}</i>Autres</a>`;
+  const cells = GRID.map(id => { const c = CAT[id]; return `<a class="gi" href="#/search?cat=${id}" style="background:${c.bg}"><i style="background:linear-gradient(150deg,${c.fg},${c.fg}CC)">${svg(CI[id], 22, '#fff', 2)}</i>${esc(c.label.replace('Stations-service', 'Stations service'))}</a>`; }).join('')
+    + `<a class="gi" href="#/categories" style="background:#EEF0F8"><i style="background:linear-gradient(150deg,#8A90A3,#6B7185)">${svg('<circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/>', 22, '#fff', 3)}</i>Autres</a>`;
   shell(`<div class="homec"><div class="hero2"><img class="herophoto" src="hero.jpg" alt=""><span class="heroshade"></span><div class="in safe-top"><div class="hrow"><div class="logo" style="padding:3px"><img src="logo.png" alt="" style="height:44px"></div>
     <div style="flex:1;min-width:0">${brand}<div class="tag">Découvrez, trouvez, visitez Bangui</div></div>
     <a class="icb" href="#/messages" aria-label="Messages">${svg(I.bell, 19, '#fff')}<b class="bdg" id="bdg-msg" style="display:none"></b></a><a class="icb" href="#/profil" aria-label="Profil">${svg(I.user, 19, '#fff')}</a></div>
     <div class="greet">Bonjour,<b>Trouvez un lieu à Bangui</b><i></i></div></div></div>
-    <form class="sbar2" id="sf">${svg(I.search, 20, '#142A52')}<input id="q" type="search" placeholder="Restaurant, hôtel, pharmacie, banque…" enterkeyhint="search"><button type="button" class="lb" id="loc" aria-label="Autour de moi">${svg(I.locate, 20, me0 ? '#1E6BE0' : '#142A52')}</button></form>
+    <form class="sbar2" id="sf">${svg(I.search, 20, '#142A52')}<input id="q" type="search" placeholder="Restaurant, hôtel, pharmacie…" enterkeyhint="search"><button type="button" class="lb" id="loc" aria-label="Autour de moi">${svg(I.locate, 20, me0 ? '#1E6BE0' : '#142A52')}</button></form>
     <div class="grid">${cells}</div>
     <div class="zones" id="zones"></div>
     <div id="feat"></div>
@@ -38,7 +38,7 @@ export async function home() {
   draw();
   const feat = all.filter(isSponsored);
   if (feat.length) {
-    document.getElementById('feat').innerHTML = `<div class="bnr" id="bnr">${feat.map(p => `<a class="banner" href="#/place/${p.id}"><div class="bl">${photoBox(p, '', 46)}${spBadge(true)}</div>
+    document.getElementById('feat').innerHTML = `<div class="bnr" id="bnr">${feat.map(p => `<a class="banner" href="#/place/${p.id}"><div class="bl">${photoBox(p, '', 46, true)}${spBadge(true)}</div>
       <div class="br"><div class="nm" style="font-size:17px;line-height:1.15">${esc(p.name)}</div><div style="font-size:12.5px;opacity:.9">${esc(CAT[p.category]?.label || '')}${p.area ? ' · ' + esc(p.area) : ''}</div>
       ${p._r != null ? `<div style="display:flex;gap:6px;align-items:center;font-size:12px">${stars(p._r, 13)} (${p._n} avis)</div>` : ''}<span class="bb">Découvrir ${svg('<path d="M5 12h14M13 6l6 6-6 6"/>', 15, '#3A1646', 2.5)}</span></div></a>`).join('')}</div>
       <div class="dots" id="dots">${feat.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>`;

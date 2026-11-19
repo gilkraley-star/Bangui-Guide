@@ -31,7 +31,7 @@ export async function search(params) {
 
 export function categories() {
   shell(`<div class="hero safe-top" style="padding-bottom:22px"><h1 style="font-size:22px">Toutes les catégories</h1></div>
-    <div class="catg">${CATS.map(c => `<a class="gi" href="#/search?cat=${c.id}" style="background:linear-gradient(160deg,${c.fg},${c.fg}CC)"><i style="background:#fff">${svg(CI[c.id], 22, c.fg, 2.2)}</i>${esc(c.label)}</a>`).join('')}</div>`, 'search');
+    <div class="catg">${CATS.map(c => `<a class="gi" href="#/search?cat=${c.id}" style="background:${c.bg}"><i style="background:linear-gradient(150deg,${c.fg},${c.fg}CC)">${svg(CI[c.id], 22, '#fff', 2)}</i>${esc(c.label)}</a>`).join('')}</div>`, 'search');
 }
 
 export async function favsPage() {
