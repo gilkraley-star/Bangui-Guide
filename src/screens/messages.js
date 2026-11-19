@@ -26,6 +26,7 @@ export async function messages() {
 }
 
 export async function chat(id) {
+  setTimeout(() => { const d = sessionStorage.getItem('bg_draft'), i = document.getElementById('ci'); if (d && i) { i.value = d; sessionStorage.removeItem('bg_draft'); i.focus(); } }, 400);
   $app.innerHTML = `<div class="top safe-top" style="background:#fff;border-bottom:1px solid #ECEEF2"><button class="back" id="back">${svg(I.back, 20)}</button><div id="ct" style="font-weight:700;font-size:16px;min-width:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">…</div></div>
     <div class="scroll" id="scroll"><div class="chat" id="cm"></div></div>
     <form class="cbar" id="cf"><input id="ci" placeholder="Écrire un message…" maxlength="2000" autocomplete="off"><button aria-label="Envoyer">${svg(I.send, 20, '#fff')}</button></form>`;

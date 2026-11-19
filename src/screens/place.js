@@ -3,6 +3,22 @@ import { CAT } from '../data.js';
 import { $app, onLeave, photoBox, itemPhoto, heroOf, spBadge, stars, errBox, notConfigured, brand, plain, topbar, bindBack, rowHtml } from '../ui.js';
 
 const ITEM = { restaurant: ['Menu', 'restaurant'], hotel: ['Chambres', 'hotel'], commerce: ['Produits', 'commerce'], pharmacie: ['Produits', 'pharmacie'], ecole: ['Niveaux', 'ecole'], universite: ['Filières', 'universite'], voyage: ['Vols', 'voyage'], garage: ['Services', 'garage'], salon: ['Services', 'salon'], banque: ['Services', 'banque'], hopital: ['Services', 'hopital'], transport: ['Tarifs', 'transport'], btp: ['Services', 'btp'], station: ['Services', 'station'] };
+const CTA = {
+  hotel: ['Demander une réservation', 'Bonjour, je souhaite réserver une chambre.\nDates : \nNombre de personnes : '],
+  restaurant: ['Réserver une table', 'Bonjour, je souhaite réserver une table.\nDate et heure : \nNombre de personnes : '],
+  hopital: ['Appeler maintenant', null, 'Ou prendre rendez-vous (non urgent)', 'Bonjour, je souhaite prendre rendez-vous.\nSpécialité : \nDate souhaitée : '],
+  pharmacie: ['Appeler maintenant', null],
+  garage: ['Prendre rendez-vous', 'Bonjour, je souhaite un rendez-vous pour mon véhicule.\nProblème : \nDate souhaitée : '],
+  salon: ['Prendre rendez-vous', 'Bonjour, je souhaite un rendez-vous.\nService : \nDate et heure : '],
+  banque: ['Prendre rendez-vous', 'Bonjour, je souhaite un rendez-vous.\nMotif : \nDate souhaitée : '],
+  transport: ['Commander une course', 'Bonjour, je souhaite une course.\nDépart : \nDestination : \nHeure : '],
+  universite: ['Demander une inscription', 'Bonjour, je souhaite m’inscrire.\nFilière : \nNiveau : '],
+  ecole: ['Demander une inscription', 'Bonjour, je souhaite inscrire mon enfant.\nNiveau : \nRentrée : '],
+  voyage: ['Demander une réservation', 'Bonjour, je souhaite réserver un voyage.\nDestination : \nDates : '],
+  btp: ['Demander un devis', 'Bonjour, je souhaite un devis.\nProjet : \nBudget : '],
+  commerce: ['Passer commande', 'Bonjour, je souhaite commander :\n']
+};
+const BADGE = /24|garde|urgence|inscription|disponible|ouvert/i;
 const TAG_ICON = {
   'Wi-Fi': '<path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><path d="M12 20h.01"/>',
   'Parking': '<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 17V7h4a3 3 0 0 1 0 6H9"/>',
@@ -39,10 +55,13 @@ export async function place(id) {
   const mine = prof && reviews.find(r => r.user_id === prof.uid);
   const canManage = prof && (prof.role === 'admin' || p.owner_id === prof.uid);
 
+  const cta = CTA[p.category], tel = p.phone ? p.phone.replace(/[^\d+]/g, '') : '';
+  const ctaHtml = cta ? `<div class="cta">${cta[1] === null ? (tel ? `<a class="btn" href="tel:${esc(tel)}">${svg(I.phone, 18, '#fff')} ${cta[0]}</a>` : '') : `<button class="btn" id="cta">${cta[0]}</button>`}${cta[2] ? `<button class="lnk" id="cta2">${cta[2]}</button>` : ''}</div>` : '';
   const itemsHtml = () => {
     if (!its.length) return `<div class="card2"><div class="empty" style="padding:20px">${itemInfo?.[0] || 'Contenu'} à venir. L’établissement n’a pas encore ajouté d’éléments.</div></div>`;
     const cards = ['hotel', 'commerce', 'pharmacie'].includes(p.category);
     const th = it => itemPhoto(it) ? `<div style="background:center/cover url('${esc(itemPhoto(it))}')"></div>` : photoBox({ category: p.category }, '', 30);
+    if (!cards && !its.some(i => itemPhoto(i))) return `<div class="card2 tlist"><div class="sh">${(itemInfo?.[0] || 'Services') === 'Tarifs' ? 'Tarifs' : (itemInfo?.[0] || 'Services') + ' & tarifs'}</div>${its.map(it => `<div class="trow"><div style="min-width:0"><b>${esc(it.name)}</b>${it.description ? `<div class="sub" style="margin:1px 0 0">${esc(it.description)}</div>` : ''}</div><span class="pr">${esc(fmtPrice(it.price, it.unit))}</span></div>`).join('')}</div>`;
     return cards ? `<div class="icards">${its.map(it => `<div class="icd"><div class="ti">${th(it)}</div><div class="tx"><b style="font-size:14px">${esc(it.name)}</b><div class="pr" style="color:#E2541F;font-weight:800;margin-top:3px">${esc(fmtPrice(it.price, it.unit))}</div></div></div>`).join('')}</div>`
       : `<div class="card2 itmwrap">${its.map(it => `<div class="itm"><div class="ti">${th(it)}</div><div style="flex:1;min-width:0"><b>${esc(it.name)}</b>${it.description ? `<div class="sub" style="margin:2px 0 0">${esc(it.description)}</div>` : ''}</div><span class="pr">${esc(fmtPrice(it.price, it.unit))}</span></div>`).join('')}</div>`;
   };
@@ -85,21 +104,25 @@ export async function place(id) {
       <div style="display:flex;gap:8px"><button class="back" id="fav" aria-label="Favori">${svg(I.heart, 19, isFav ? '#E2541F' : '#142A52').replace('fill="none"', isFav ? 'fill="#E2541F"' : 'fill="none"')}</button><button class="back" id="shr" aria-label="Partager">${svg(I.share, 18)}</button></div></div>
       <div class="dph">${photoBox(p, '', 56, true)}${sp ? spBadge(true) : ''}</div></div>
     <div class="sheet2"><div style="display:flex;gap:14px;align-items:center"><div class="ib" style="background:linear-gradient(150deg,${c.fg},${c.fg}BB)">${svg(catPath(p.category), 38, '#fff', 1.8)}</div>
-      <div style="min-width:0;flex:1"><span class="pill" style="background:${c.bg};color:${c.fg}">${esc(c.label)}</span>${p.verified ? ' <span class="pill" style="background:#EAF8EF;color:#1E7A43">✓ Vérifié</span>' : ''}
+      <div style="min-width:0;flex:1"><span class="pill" style="background:${c.bg};color:${c.fg}">${esc(c.label)}</span>${p.verified ? ' <span class="pill" style="background:#EAF8EF;color:#1E7A43">✓ Vérifié</span>' : ''}${(p.tags || []).filter(t => BADGE.test(t)).map(t => ` <span class="pill" style="background:#E7F7EC;color:#168A3C">${esc(t)}</span>`).join('')}
       <h1 style="font-size:23px;line-height:1.15;margin:6px 0 4px">${esc(p.name)}</h1><div class="sub" style="margin:0;display:flex;gap:5px;align-items:center">${svg(PIN, 15, '#1E2A78', 2)} ${esc(p.area || 'Bangui')}</div></div></div>
       ${avg != null ? `<div style="display:flex;gap:8px;align-items:center;margin-top:10px"><b style="font-size:18px">${avg.toFixed(1).replace('.', ',')}</b>${stars(avg, 17)}<span class="sub" style="margin:0">(${n} avis)</span></div>` : ''}
       ${p.description ? `<p class="dsc">${esc(p.description)}</p>` : ''}
       <div class="acts">${p.phone ? `<a class="btn" style="flex:1.2" href="tel:${esc(p.phone.replace(/[^\d+]/g, ''))}">${svg(I.phone, 18, '#fff')} Appeler</a>` : ''}<button class="btn sec2" id="wr" style="flex:1">${svg(I.msg, 18, '#2A4A8A')} Écrire</button><button class="btn sec2" id="dir" style="flex:1.1">${svg(I.nav, 18, '#2A4A8A')} Itinéraire</button></div>
-      <div class="tabs" id="tabs"></div><div id="tabc"></div></div></div>`;
+      <div class="tabs" id="tabs"></div><div id="tabc"></div>${ctaHtml}</div></div>`;
   bindBack(); draw();
   document.getElementById('dir').onclick = () => window.open(url, '_system');
-  document.getElementById('wr').onclick = async e => {
-    if (!prof) { requireLogin('#/place/' + id); return; }
-    e.currentTarget.disabled = true;
+  const openChat = async (btn, draft) => {
+    if (!prof) { if (draft) sessionStorage.setItem('bg_draft', draft); requireLogin('#/place/' + id); return; }
+    btn.disabled = true;
     let { data: cv } = await sb.from('conversations').select('id').eq('place_id', id).eq('user_id', prof.uid).maybeSingle();
-    if (!cv) { const r = await sb.from('conversations').insert({ place_id: id, user_id: prof.uid, user_name: prof.full_name }).select('id').single(); if (r.error) { toast('Erreur : ' + r.error.message); e.currentTarget.disabled = false; return; } cv = r.data; }
+    if (!cv) { const r = await sb.from('conversations').insert({ place_id: id, user_id: prof.uid, user_name: prof.full_name }).select('id').single(); if (r.error) { toast('Erreur : ' + r.error.message); btn.disabled = false; return; } cv = r.data; }
+    if (draft) sessionStorage.setItem('bg_draft', draft);
     location.hash = '#/chat/' + cv.id;
   };
+  document.getElementById('wr').onclick = e => openChat(e.currentTarget, null);
+  if (document.getElementById('cta')) document.getElementById('cta').onclick = e => openChat(e.currentTarget, cta[1]);
+  if (document.getElementById('cta2')) document.getElementById('cta2').onclick = e => openChat(e.currentTarget, cta[3]);
   document.getElementById('fav').onclick = () => { const a = favs.get(), i = a.indexOf(p.id); i >= 0 ? a.splice(i, 1) : a.push(p.id); favs.set(a); toast(i >= 0 ? 'Retiré des favoris' : 'Ajouté aux favoris'); place(id); };
   document.getElementById('shr').onclick = async () => { const text = `${p.name} — ${p.address || p.area || 'Bangui'} (Bangui Guide)`; try { navigator.share ? await navigator.share({ title: p.name, text, url }) : (await navigator.clipboard.writeText(text + ' ' + url), toast('Copié')); } catch { } };
   bindAdmin = () => {
