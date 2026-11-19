@@ -5,10 +5,12 @@ import { shell, brand, rowHtml, skel, errBox, notConfigured, photoBox, spBadge, 
 const GRID = ['restaurant', 'hotel', 'pharmacie', 'banque', 'hopital', 'culte', 'commerce', 'admin', 'station'];
 const ZONES = ['Tous', 'Centre-ville', 'Km5', 'Koudoukou'];
 
+const CIRC = new Set(['restaurant', 'pharmacie']);
+const ICC = { restaurant: '#F26A1B', hotel: '#1B2F6B', pharmacie: '#1FA34A', banque: '#2A3A8A', hopital: '#E5322D', culte: '#5B2D8A', commerce: '#F28A1E', admin: '#1B2F6B', station: '#1B2F6B' };
 export async function home() {
   const me0 = getPos();
-  const cells = GRID.map(id => { const c = CAT[id]; return `<a class="gi" href="#/search?cat=${id}" style="background:${c.bg}"><i style="background:linear-gradient(150deg,${c.fg},${c.fg}CC)">${svg(CI[id], 22, '#fff', 2)}</i>${esc(c.label.replace('Stations-service', 'Stations service'))}</a>`; }).join('')
-    + `<a class="gi" href="#/categories" style="background:#EEF0F8"><i style="background:linear-gradient(150deg,#8A90A3,#6B7185)">${svg('<circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/>', 22, '#fff', 3)}</i>Autres</a>`;
+  const cells = GRID.map(id => { const c = CAT[id]; return `<a class="gi" href="#/search?cat=${id}" style="background:#fff"><i style="${CIRC.has(id) ? `background:${ICC[id]}` : 'background:none;box-shadow:none'}">${svg(CI[id], CIRC.has(id) ? 18 : 30, CIRC.has(id) ? '#fff' : (ICC[id] || c.fg), 2)}</i>${esc(c.label.replace('Stations-service', 'Stations service'))}</a>`; }).join('')
+    + `<a class="gi" href="#/categories" style="background:#fff"><i style="background:none;box-shadow:none">${svg('<circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/>', 26, '#142A52', 3)}</i>Autres</a>`;
   shell(`<div class="homec"><div class="hero2"><img class="herophoto" src="hero.jpg" alt=""><span class="heroshade"></span><div class="in safe-top"><div class="hrow"><div class="logo" style="padding:3px"><img src="logo.png" alt="" style="height:44px"></div>
     <div style="flex:1;min-width:0">${brand}<div class="tag">Découvrez, trouvez, visitez Bangui</div></div>
     <a class="icb" href="#/messages" aria-label="Messages">${svg(I.bell, 19, '#fff')}<b class="bdg" id="bdg-msg" style="display:none"></b></a><a class="icb" href="#/profil" aria-label="Profil">${svg(I.user, 19, '#fff')}</a></div>

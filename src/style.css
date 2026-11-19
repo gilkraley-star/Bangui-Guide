@@ -307,3 +307,16 @@ html,body{background:#F4F7FF}
 .btn.sec2{background:#E4ECFF;color:#1E3F7A;box-shadow:none}
 .pcard,.card2,.card{box-shadow:0 6px 18px rgba(30,60,140,.1)}
 .dots i{background:rgba(255,255,255,.6)}
+
+/* ===== V7 : graphisme final (accueil de référence) ===== */
+.nav{background:linear-gradient(180deg,#12306F,#0B1F55)!important;box-shadow:0 10px 26px rgba(5,15,60,.5)!important}.nav a{color:#fff!important}.nav a.on{background:linear-gradient(135deg,#FF8A1F,#E2411B)!important;color:#fff!important}
+.homec .hero2{height:186px;border-radius:0 0 30px 30px}
+.homec .gi{background:#fff!important;color:#142A52;min-height:50px;justify-content:center;border-radius:13px;box-shadow:0 3px 10px rgba(30,60,140,.14);padding:4px 2px 3px;gap:1px}
+.homec .gi i{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.homec .zc.on{background:linear-gradient(135deg,#FF8A1F,#E2411B)!important;border-color:transparent!important;color:#fff!important}
+.homec .zc{border:0;box-shadow:0 2px 8px rgba(30,60,140,.12)}
+.homec .banner{background:linear-gradient(110deg,#1A1A1A 0,#E2541F 38%,#FF8A1F 100%)!important}
+.homec .sec .more{background:#0F2A6B;color:#fff;padding:6px 14px;border-radius:999px}
+.homec .th2{width:112px;height:42px;border-radius:9px}.homec .row2 .pill{display:none}
+.homec .row2{padding:3px 8px 3px 3px}.homec .row2 .rt span{color:#0F2A6B}
+.homec .gi i{width:30px;height:30px}.homec .gi{min-height:54px}
