@@ -117,9 +117,10 @@ export function sectorBody(p, its, state = {}) {
   const cat = p.category, tags = p.tags || [];
   if (state.all) return `<div class="card2 tlist"><div class="sh">Tout voir</div>${its.map(it => `<div class="trow${sold(it)}">${itemPhoto(it) ? `<div class="tth" ${photoStyle(itemPhoto(it))}></div>` : `<span class="sxi sm">${ico(it.name, 24)}</span>`}<div style="min-width:0;flex:1"><b>${esc(it.name)}</b>${it.description ? `<div class="sub" style="margin:1px 0 0">${esc(it.description)}</div>` : ''}</div><span class="pr">${esc(fmtPrice(it.price, it.unit))}</span></div>`).join('')}</div><button class="lnk" data-all="0" style="margin:6px auto 0;display:block">← Revenir</button>`;
   if (!its.length && !['pharmacie'].includes(cat)) return empty(TABNAME[cat] || 'Contenu');
-  const more = its.length > 4 ? 'Voir toutes' : '';
+  const CAP = { hotel: 2, restaurant: 2, pharmacie: 4, commerce: 6, hopital: 4, universite: 2, ecole: 2, banque: 4, admin: 4, transport: 3, btp: 4, voyage: 3, station: 3 };
+  const cap = CAP[cat] || 4; const more = its.length > cap ? 'Voir toutes' : '';
 
-  if (cat === 'hotel') return `${head('Nos chambres', more)}<div class="sxrooms">${its.map(it => `<div class="sxroom${sold(it)}"><div class="ph" ${photoStyle(itemPhoto(it) || 'img/hotel-hero.jpg')}></div><b>${esc(it.name)}</b><span>${it.price != null ? 'à partir de ' + esc(fmtPrice(it.price, it.unit)) : ''}</span></div>`).join('')}</div>
+  if (cat === 'hotel') return `${head('Nos chambres', more)}<div class="sxrooms">${its.slice(0, 2).map(it => `<div class="sxroom${sold(it)}"><div class="ph" ${photoStyle(itemPhoto(it) || 'img/hotel-hero.jpg')}></div><b>${esc(it.name)}</b><span>${it.price != null ? 'à partir de ' + esc(fmtPrice(it.price, it.unit)) : ''}</span></div>`).join('')}</div>
     ${tags.length ? `<div class="sxam">${tags.slice(0, 6).map(t => `<div>${ico(t, 26, '#1E3A8A')}<span>${esc(/^Wi-?Fi$/i.test(t) ? 'Wi-Fi gratuit' : t === 'Parking' ? 'Parking sécurisé' : t)}</span></div>`).join('')}</div>` : ''}`;
 
   if (cat === 'restaurant') return `<div class="card2 sxmenu">${head('Menu en aperçu')}${its.slice(0, 2).map(it => `<div class="sxdish${sold(it)}"><div class="ph" ${photoStyle(itemPhoto(it) || 'img/restaurant.jpg')}></div><div><b>${esc(it.name)}</b>${it.description ? `<small>${esc(it.description)}</small>` : ''}<em>${esc(fmtPrice(it.price, it.unit))}</em></div></div>`).join('')}
@@ -129,28 +130,28 @@ export function sectorBody(p, its, state = {}) {
     return `${head('Nos services')}<div class="sxtiles t4">${its.slice(0, 4).map(it => tile(it)).join('') || ['Médicaments', 'Produits de santé', 'Parapharmacie', 'Mère & Enfant'].map(n => tile({ name: n })).join('')}</div>
     <div class="sxduo"><div class="card2 sxhr"><b>${svg(P.clock, 24, '#142A52', 1.9)} Horaires</b>${hh.length ? hh.map(x => `<div>${esc(x)}</div>`).join('') : '<div>À renseigner</div>'}</div><div class="sxgarde ${p.on_duty ? '' : 'off'}"><div>${svg(P.cal, 24, 'currentColor', 1.9)}<b>Garde</b><small>${p.on_duty ? 'Aujourd’hui' : 'Pas de garde'}</small></div>${p.on_duty ? `<span class="ok">${svg(P.check, 22, '#fff', 3)}</span>` : ''}</div></div>`; }
 
-  if (cat === 'commerce') return `${head('Nos produits', its.length > 6 ? 'Voir tout' : '')}<div class="sxgrid">${its.map(it => `<div class="sxprod${sold(it)}"><div class="ph" ${photoStyle(itemPhoto(it) || 'img/shop-hero.jpg')}></div><b>${esc(it.name)}</b>${it.price ? `<small>${esc(fmtPrice(it.price, it.unit))}</small>` : ''}</div>`).join('')}</div>
+  if (cat === 'commerce') return `${head('Nos produits', its.length > 6 ? 'Voir tout' : '')}<div class="sxgrid">${its.slice(0, 6).map(it => `<div class="sxprod${sold(it)}"><div class="ph" ${photoStyle(itemPhoto(it) || 'img/shop-hero.jpg')}></div><b>${esc(it.name)}</b>${it.price ? `<small>${esc(fmtPrice(it.price, it.unit))}</small>` : ''}</div>`).join('')}</div>
     ${strip(tags, [[/livraison/i, 'Livraison à Bangui'], [/garanti/i, 'Produits garantis'], [/paiement/i, 'Paiement sécurisé']])}`;
 
-  if (cat === 'hopital') return `${head('Services médicaux', more ? 'Voir tous' : '')}<div class="sxsvc">${its.map(it => `<div class="sxs${sold(it)}"><span class="sxi">${ico(it.name, 36)}</span><div><b>${esc(it.name)}</b>${it.description ? `<small>${esc(it.description)}</small>` : ''}</div></div>`).join('')}</div>`;
+  if (cat === 'hopital') return `${head('Services médicaux', more ? 'Voir tous' : '')}<div class="sxsvc">${its.slice(0, 4).map(it => `<div class="sxs${sold(it)}"><span class="sxi">${ico(it.name, 36)}</span><div><b>${esc(it.name)}</b>${it.description ? `<small>${esc(it.description)}</small>` : ''}</div></div>`).join('')}</div>`;
 
-  if (cat === 'universite' || cat === 'ecole') return `${head('Nos formations', more ? 'Voir toutes' : '')}<div class="sxfor">${its.map(it => `<div class="sxf${sold(it)}"><div class="ph" ${photoStyle(itemPhoto(it) || 'img/h-univ.jpg')}></div><div class="tt"><span class="sxi sm">${ico(it.name, 22)}</span><b>${esc(it.name)}</b></div>${it.description ? `<small>${esc(it.description)}</small>` : ''}${it.price ? `<span class="fee">Frais de scolarité</span><em>${esc(fmtPrice(it.price, it.unit))}</em>` : ''}</div>`).join('')}</div>`;
+  if (cat === 'universite' || cat === 'ecole') return `${head('Nos formations', more ? 'Voir toutes' : '')}<div class="sxfor">${its.slice(0, 2).map(it => `<div class="sxf${sold(it)}"><div class="ph" ${photoStyle(itemPhoto(it) || 'img/h-univ.jpg')}></div><div class="tt"><span class="sxi sm">${ico(it.name, 22)}</span><b>${esc(it.name)}</b></div>${it.description ? `<small>${esc(it.description)}</small>` : ''}${it.price ? `<span class="fee">Frais de scolarité</span><em>${esc(fmtPrice(it.price, it.unit))}</em>` : ''}</div>`).join('')}</div>`;
 
-  if (cat === 'banque' || cat === 'admin') return `${head(cat === 'admin' ? 'Démarches administratives' : 'Nos services', more ? 'Voir tous' : '')}<div class="sxtiles t4">${its.slice(0, 8).map(it => tile(it)).join('')}</div>`;
+  if (cat === 'banque' || cat === 'admin') return `${head(cat === 'admin' ? 'Démarches administratives' : 'Nos services', more ? 'Voir tous' : '')}<div class="sxtiles t4 o">${its.slice(0, 4).map(it => tile(it)).join('')}</div>`;
 
-  if (cat === 'transport') return `${head('Nos véhicules en location', its.length > 3 ? 'Voir tous' : '')}<div class="sxveh">${its.map(it => `<div class="sxv${sold(it)}"><div class="ph" ${photoStyle(itemPhoto(it) || 'img/h-auto.jpg')}></div><b>${esc(it.name)}</b>${it.description ? `<small>${svg(P.car, 15, '#3A3F52', 1.8)} ${esc(it.description)}</small>` : ''}<em>${esc(fmtPrice(it.price))}</em>${it.unit ? `<i>/ ${esc(it.unit)}</i>` : ''}</div>`).join('')}</div>
+  if (cat === 'transport') return `${head('Nos véhicules en location', its.length > 3 ? 'Voir tous' : '')}<div class="sxveh">${its.slice(0, 3).map(it => `<div class="sxv${sold(it)}"><div class="ph" ${photoStyle(itemPhoto(it) || 'img/h-auto.jpg')}></div><b>${esc(it.name)}</b>${it.description ? `<small>${svg(P.car, 15, '#3A3F52', 1.8)} ${esc(it.description)}</small>` : ''}<em>${esc(fmtPrice(it.price))}</em>${it.unit ? `<i>/ ${esc(it.unit)}</i>` : ''}</div>`).join('')}</div>
     ${strip(tags, [[/chauffeur/i, 'Avec chauffeur'], [/assur/i, 'Véhicules assurés'], [/entretenu/i, 'Bien entretenus'], [/rapide/i, 'Réservation rapide']])}`;
 
-  if (cat === 'btp') return `${head('Nos services', more ? 'Voir tous' : '')}<div class="sxbtp">${its.map(it => `<div class="sxb${sold(it)}"><div class="ph" ${photoStyle(itemPhoto(it) || 'img/h-btp.jpg')}></div><div class="tt"><span class="sxi sm">${ico(it.name, 22)}</span><div><b>${esc(it.name)}</b>${it.description ? `<small>${esc(it.description)}</small>` : ''}</div></div></div>`).join('')}</div>`;
+  if (cat === 'btp') return `${head('Nos services', more ? 'Voir tous' : '')}<div class="sxbtp">${its.slice(0, 4).map(it => `<div class="sxb${sold(it)}"><div class="ph" ${photoStyle(itemPhoto(it) || 'img/h-btp.jpg')}></div><div class="tt"><span class="sxi sm">${ico(it.name, 22)}</span><div><b>${esc(it.name)}</b>${it.description ? `<small>${esc(it.description)}</small>` : ''}</div></div></div>`).join('')}</div>`;
 
-  if (cat === 'station') { const pr = priced(its), fr = free(its); return `${pr.length ? `${head('Carburants & prix')}<div class="sxfuel">${pr.map(it => `<div class="sxfu${sold(it)}"><span class="sxi">${ico(it.name, 34)}</span><b>${esc(it.name)}</b><em>${esc(fmtPrice(it.price))}</em>${it.unit ? `<i>/ ${esc(it.unit)}</i>` : ''}</div>`).join('')}</div>` : ''}${fr.length ? `${head('Autres services')}<div class="sxmini">${fr.map(it => `<div class="sxt"><span class="sxi">${ico(it.name, 30)}</span><b>${esc(it.name)}</b></div>`).join('')}</div>` : ''}`; }
+  if (cat === 'station') { const pr = priced(its), fr = free(its); return `${pr.length ? `${head('Carburants & prix')}<div class="sxfuel">${pr.slice(0, 3).map(it => `<div class="sxfu${sold(it)}"><span class="sxi">${ico(it.name, 34)}</span><b>${esc(it.name)}</b><em>${esc(fmtPrice(it.price))}</em>${it.unit ? `<i>/ ${esc(it.unit)}</i>` : ''}</div>`).join('')}</div>` : ''}${fr.length ? `${head('Autres services')}<div class="sxmini">${fr.slice(0, 5).map(it => `<div class="sxt"><span class="sxi">${ico(it.name, 30)}</span><b>${esc(it.name)}</b></div>`).join('')}</div>` : ''}`; }
 
-  if (cat === 'voyage') { const pr = priced(its), fr = free(its); return `${head('Nos services')}<div class="sxtiles t4">${fr.slice(0, 4).map(it => tile(it)).join('')}</div>${pr.length ? `${head('Exemples de tarifs de vols', pr.length > 3 ? 'Voir tous' : '')}<div class="sxrates">${pr.map(it => `<div class="sxr${sold(it)}"><div class="ph" ${photoStyle(itemPhoto(it) || 'img/h-voyage.jpg')}></div><b>${esc(it.name)}</b>${it.description ? `<small>${esc(it.description)}</small>` : ''}<em>${esc(fmtPrice(it.price, it.unit))}</em></div>`).join('')}</div>` : ''}`; }
+  if (cat === 'voyage') { const pr = priced(its), fr = free(its); return `${head('Nos services')}<div class="sxtiles t4 o">${fr.slice(0, 4).map(it => tile(it)).join('')}</div>${pr.length ? `${head('Exemples de tarifs de vols', pr.length > 3 ? 'Voir tous' : '')}<div class="sxrates">${pr.slice(0, 3).map(it => `<div class="sxr${sold(it)}"><div class="ph" ${photoStyle(itemPhoto(it) || 'img/h-voyage.jpg')}></div><b>${esc(it.name)}</b>${it.description ? `<small>${esc(it.description)}</small>` : ''}<em>${esc(fmtPrice(it.price, it.unit))}</em></div>`).join('')}</div>` : ''}`; }
 
   /* garage, salon, culte, organisation, autres */
   const pr = priced(its);
   return pr.length ? `<div class="card2 tlist"><div class="sh">Services & tarifs</div>${its.map(it => `<div class="trow${sold(it)}">${itemPhoto(it) ? `<div class="tth" ${photoStyle(itemPhoto(it))}></div>` : `<span class="sxi sm">${ico(it.name, 24)}</span>`}<div style="min-width:0;flex:1"><b>${esc(it.name)}</b>${it.description ? `<div class="sub" style="margin:1px 0 0">${esc(it.description)}</div>` : ''}</div><span class="pr">${esc(fmtPrice(it.price, it.unit))}</span></div>`).join('')}</div>`
-    : `${head(TABNAME[cat] === 'Activités' ? 'Nos activités' : 'Nos services')}<div class="sxtiles t4">${its.slice(0, 8).map(it => tile(it)).join('')}</div>`;
+    : `${head(TABNAME[cat] === 'Activités' ? 'Nos activités' : 'Nos services')}<div class="sxtiles t4">${its.slice(0, 4).map(it => tile(it)).join('')}</div>`;
 }
 
 /* ---------- bouton d'action du bas ---------- */
@@ -169,3 +170,20 @@ export const ctaIcon = k => k === 'phone' ? I.phone : k === 'edit' ? I.edit : P[
 
 /* ---------- carrousel photo du haut ---------- */
 export const heroCarousel = (photos, badge) => photos.length ? `<div class="dph car" id="car"><div class="cs" id="cs">${photos.map(u => `<div style="background:center/cover url('${esc(u)}')"></div>`).join('')}</div>${badge || ''}${photos.length > 1 ? `<div class="cdots" id="cdots">${photos.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div><span class="ccnt" id="ccnt">${svg(I.img, 16, '#fff', 2)} 1/${photos.length}</span>` : ''}</div>` : '';
+
+export const SECTAGS = {
+  hotel: ['Wi-Fi gratuit', 'Climatisation', 'Restaurant', 'Parking sécurisé', 'Sécurité 24h/24', 'Piscine', 'Chambres disponibles'],
+  restaurant: ['Wi-Fi', 'Parking', 'Livraison', 'Paiement mobile', 'Terrasse', 'Climatisation'],
+  pharmacie: ['Garde 24/24', 'Livraison', 'Paiement mobile'],
+  commerce: ['Livraison à Bangui', 'Produits garantis', 'Paiement sécurisé', 'Paiement mobile'],
+  hopital: ['Urgences 24h/24', 'Parking', 'Ambulance', 'Maternité'],
+  universite: ['Inscriptions ouvertes', 'Wi-Fi', 'Bibliothèque', 'Année 2026–2027'],
+  ecole: ['Inscriptions ouvertes', 'Cantine', 'Transport scolaire'],
+  banque: ['Distributeur 24h/24', 'Parking', 'Change'],
+  admin: ['Sur rendez-vous', 'Accès handicapés'],
+  transport: ['Avec chauffeur', 'Véhicules assurés', 'Bien entretenus', 'Réservation rapide', 'Service 24h/24'],
+  btp: ['Devis gratuit', 'Chantiers garantis'],
+  station: ['Boutique', 'Lavage auto', 'Service 24h/24'],
+  voyage: ['Assistance visa', 'Paiement mobile']
+};
+export const PH = { hotel: ['Chambre Standard', 'nuit'], restaurant: ['Poulet braisé', ''], pharmacie: ['Médicaments', ''], commerce: ['Smartphones', ''], hopital: ['Maternité', ''], universite: ['Licence Informatique', 'an'], ecole: ['Primaire', 'an'], banque: ['Cartes bancaires', ''], admin: ['Actes de naissance', ''], transport: ['Berline (4 places)', 'course'], btp: ['Conception de plans', ''], station: ['Essence', 'litre'], voyage: ['Bangui – Douala', ''], garage: ['Vidange', ''], salon: ['Coupe homme', ''] };

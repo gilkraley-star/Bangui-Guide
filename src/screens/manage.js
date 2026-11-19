@@ -2,6 +2,8 @@ import { esc, svg, I, sb, configured, getProfile, toast, pickPhoto, uploadPhoto,
 import { CAT } from '../data.js';
 import { plain, topbar, bindBack, errBox, notConfigured, rowHtml, photoBox, shell } from '../ui.js';
 import { PRESET_TAGS } from './place.js';
+import { SECTAGS, ADDLABEL, PH, ico } from '../sector.js';
+import { itemPhoto } from '../ui.js';
 
 export async function manageList() {
   if (!configured) { plain(topbar('Mes établissements') + notConfigured()); bindBack(); return; }
@@ -25,15 +27,16 @@ export async function manage(id) {
     <div class="field"><label>Horaires</label><input id="m_h" value="${esc(p.hours || '')}" maxlength="120" placeholder="Lun–Sam 8h–18h"></div>
     <div class="field"><label>Adresse</label><input id="m_a" value="${esc(p.address || '')}" maxlength="200"></div>
     <div class="field"><label>Description</label><textarea id="m_d" maxlength="600">${esc(p.description || '')}</textarea></div>
-    <div class="field"><label>Services proposés</label><div class="fchips" style="flex-wrap:wrap;padding:0;overflow:visible" id="m_t">${PRESET_TAGS.map(t => `<button type="button" class="fc ${tags.includes(t) ? 'on' : ''}" data-t="${esc(t)}">${esc(t)}</button>`).join('')}</div></div>
+    <div class="field"><label>Services proposés</label><div class="fchips" style="flex-wrap:wrap;padding:0;overflow:visible" id="m_t">${[...new Set([...(SECTAGS[p.category] || PRESET_TAGS), ...tags])].map(t => `<button type="button" class="fc ${tags.includes(t) ? 'on' : ''}" data-t="${esc(t)}">${esc(t)}</button>`).join('')}</div></div>
+    <div class="field"><label>Galerie photos (carrousel de la fiche)</label><div class="mgal" id="m_gal"></div><button type="button" class="btn ghost" id="m_gadd">${svg(I.cam, 18)} Ajouter une photo</button></div>
     <div class="field"><label>Photo principale</label><button type="button" class="btn ghost" id="m_ph">${svg(I.cam, 18)} Changer la photo</button><img id="m_pv" src="${esc(p.photo_url || '')}" style="${p.photo_url ? '' : 'display:none;'}width:100%;border-radius:13px;margin-top:8px"></div>
     <button class="btn" id="m_save">Enregistrer</button></div>
-    <div class="card2"><div class="sh">Éléments (menu, chambres, produits, tarifs…)</div><div id="m_items"></div>
-    <div class="field" style="margin-top:12px"><label>Nom</label><input id="i_n" maxlength="120"></div>
-    <div style="display:flex;gap:8px"><div class="field" style="flex:1"><label>Prix (FCFA)</label><input id="i_p" type="number" inputmode="numeric" min="0"></div><div class="field" style="flex:1"><label>Unité</label><input id="i_u" placeholder="nuit, kg…" maxlength="20"></div></div>
+    <div class="card2"><div class="sh">${esc((ADDLABEL[p.category] || 'un élément').replace(/^./, c => c.toUpperCase()))} — catalogue</div><div id="m_items"></div>
+    <div class="mnew">Ajouter ${ADDLABEL[p.category] || 'un élément'}</div><div class="field"><label>Nom</label><input id="i_n" maxlength="120" placeholder="ex : ${esc((PH[p.category] || [''])[0])}"></div>
+    <div style="display:flex;gap:8px"><div class="field" style="flex:1"><label>Prix (FCFA)</label><input id="i_p" type="number" inputmode="numeric" min="0"></div><div class="field" style="flex:1"><label>Unité</label><input id="i_u" placeholder="${esc((PH[p.category] || ['', ''])[1] || 'nuit, kg…')}" maxlength="20"></div></div>
     <div class="field"><label>Description</label><input id="i_d" maxlength="200"></div>
     <div class="field"><button type="button" class="btn ghost" id="i_ph">${svg(I.cam, 18)} Photo (facultatif)</button><div class="sub" id="i_pt"></div></div>
-    <button class="btn sec2" id="i_add">${svg(I.plus, 18, '#2A4A8A')} Ajouter</button></div></div>`);
+    <div id="i_pv"></div><button class="btn sec2" id="i_add">${svg(I.plus, 18, '#2A4A8A')} Ajouter</button></div></div>`);
   bindBack(); const $ = i => document.getElementById(i);
   document.querySelectorAll('#m_t .fc').forEach(b => b.onclick = () => { const t = b.dataset.t; tags = tags.includes(t) ? tags.filter(x => x !== t) : [...tags, t]; b.classList.toggle('on'); });
   $('m_ph').onclick = async () => { try { const ph = await pickPhoto(); if (ph) { photo = ph; $('m_pv').src = ph; $('m_pv').style.display = 'block'; } } catch (e) { if (!/cancel/i.test(e?.message || '')) toast('Photo impossible'); } };
@@ -48,7 +51,7 @@ export async function manage(id) {
   };
   let list = its || [], ip = null, editId = null;
   const drawItems = () => {
-    $('m_items').innerHTML = list.length ? list.map(it => `<div class="itm ${it.available === false ? 'soldout' : ''}"><div style="flex:1;min-width:0"><b>${esc(it.name)}</b><div class="sub" style="margin:0">${esc(fmtPrice(it.price, it.unit))}</div></div>
+    $('m_items').innerHTML = list.length ? list.map(it => `<div class="itm mit ${it.available === false ? 'soldout' : ''}">${itemPhoto(it) ? `<span class="mth" style="background:center/cover url('${esc(itemPhoto(it))}')"></span>` : `<span class="mth ic">${ico(it.name, 22, '#1E3A8A')}</span>`}<div style="flex:1;min-width:0"><b>${esc(it.name)}</b><div class="sub" style="margin:0">${esc(fmtPrice(it.price, it.unit))}</div></div>
       <button class="fc ${it.available === false ? '' : 'on'}" data-a="${it.id}">${it.available === false ? 'Épuisé' : 'Dispo'}</button>
       <button class="back" data-e="${it.id}" aria-label="Modifier">${svg(I.edit, 17)}</button><button class="back" data-d="${it.id}" aria-label="Supprimer">${svg(I.trash, 18, '#C23B3B')}</button></div>`).join('') : '<div class="sub">Aucun élément pour l’instant.</div>';
     document.querySelectorAll('#m_items [data-d]').forEach(b => b.onclick = async () => { const { error } = await sb.from('place_items').delete().eq('id', b.dataset.d); if (error) { toast('Erreur : ' + error.message); return; } list = list.filter(x => x.id !== b.dataset.d); drawItems(); });
@@ -68,6 +71,11 @@ export async function manage(id) {
     } catch (e) { toast('Erreur : ' + (e.message || e)); }
     b.disabled = false;
   };
+  let gal = [...(p.photos || [])];
+  const drawGal = () => { $('m_gal').innerHTML = gal.length ? gal.map((u, i) => `<div class="gph" style="background:center/cover url('${esc(u)}')"><button type="button" data-g="${i}" aria-label="Retirer">${svg(I.trash, 15, '#fff')}</button></div>`).join('') : '<div class="sub">Aucune photo. Ajoutez 3 à 6 photos pour un beau carrousel.</div>';
+    $('m_gal').querySelectorAll('[data-g]').forEach(b => b.onclick = async () => { const n = gal.filter((_, i) => i !== +b.dataset.g); const { error } = await sb.rpc('owner_set_photos', { p_id: id, p_photos: n }); if (error) { toast('Erreur : ' + error.message); return; } gal = n; drawGal(); }); };
+  drawGal();
+  $('m_gadd').onclick = async () => { try { const ph = await pickPhoto(); if (!ph) return; $('m_gadd').disabled = true; const url = await uploadPhoto(prof.uid, ph); const n = [...gal, url]; const { error } = await sb.rpc('owner_set_photos', { p_id: id, p_photos: n }); if (error) throw error; gal = n; drawGal(); toast('Photo ajoutée'); } catch (e) { if (!/cancel/i.test(e?.message || '')) toast('Erreur : ' + (e.message || 'photo impossible')); } $('m_gadd').disabled = false; };
   /* statistiques + garde */
   const dutyOn = () => `<div class="field" style="margin:0"><label>${p.category === 'pharmacie' ? 'Pharmacie de garde aujourd’hui' : 'De garde / service d’urgence aujourd’hui'}</label><button type="button" class="fc ${p.on_duty ? 'on' : ''}" id="m_duty" style="margin-top:4px">${p.on_duty ? 'Oui, de garde' : 'Non'}</button></div>`;
   $('m_top').innerHTML = `<div class="card2"><div class="sh">Statistiques</div><div class="stat" id="m_stat"><div><b>…</b><span>chargement</span></div></div></div><div class="card2">${dutyOn()}</div>`;
