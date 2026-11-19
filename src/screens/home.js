@@ -9,6 +9,7 @@ const CIRC = new Set(['restaurant', 'pharmacie']);
 const ICC = { restaurant: '#F26A1B', hotel: '#1B2F6B', pharmacie: '#1FA34A', banque: '#2A3A8A', hopital: '#E5322D', culte: '#5B2D8A', commerce: '#F28A1E', admin: '#1B2F6B', station: '#1B2F6B' };
 export async function home() {
   const me0 = getPos();
+  if (!me0 && !sessionStorage.getItem('bg_askpos')) { sessionStorage.setItem('bg_askpos', '1'); locate().then(ok => { if (ok && location.hash.replace('#', '') in { '': 1, '/': 1 }) home(); }); }
   const cells = GRID.map(id => { const c = CAT[id]; return `<a class="gi" href="#/search?cat=${id}" style="background:#fff"><i style="${CIRC.has(id) ? `background:${ICC[id]}` : 'background:none;box-shadow:none'}">${svg(CI[id], CIRC.has(id) ? 18 : 30, CIRC.has(id) ? '#fff' : (ICC[id] || c.fg), 2)}</i>${esc(c.label.replace('Stations-service', 'Stations service'))}</a>`; }).join('')
     + `<a class="gi" href="#/categories" style="background:#fff"><i style="background:none;box-shadow:none">${svg('<circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/>', 26, '#142A52', 3)}</i>Autres</a>`;
   shell(`<div class="homec"><div class="hero2"><img class="herophoto" src="hero.jpg" alt=""><span class="heroshade"></span><div class="in safe-top"><div class="hrow"><div class="logo" style="padding:3px"><img src="logo.png" alt="" style="height:44px"></div>
@@ -35,6 +36,7 @@ export async function home() {
     document.querySelectorAll('.zc[data-z]').forEach(b => b.onclick = () => { zone = b.dataset.z; draw(); });
     const list = zone === 'Tous' ? all : all.filter(p => (p.area || '').toLowerCase().includes(zone.toLowerCase()));
     recent.innerHTML = list.length ? (list.filter(p => !isSponsored(p)).concat(list.filter(isSponsored)).slice(0, 5)).map(rowHtml).join('') : `<div class="empty">Aucun lieu dans cette zone pour l’instant.</div>`;
+    setTimeout(fit, 0);
     const inv = document.getElementById('inv'); if (inv) inv.onclick = async () => { try { await navigator.share({ title: 'Bangui Guide', text: 'Trouve restaurants, hôtels, pharmacies et services à Bangui avec Bangui Guide !' }); } catch { } };
   };
   draw();
@@ -48,8 +50,7 @@ export async function home() {
     b.addEventListener('scroll', () => { const i = Math.round(b.scrollLeft / b.clientWidth); dots.forEach((d, k) => d.classList.toggle('on', k === i)); }, { passive: true });
     if (feat.length > 1) { const t = setInterval(() => { const n = (Math.round(b.scrollLeft / b.clientWidth) + 1) % feat.length; b.scrollTo({ left: n * b.clientWidth, behavior: 'smooth' }); }, 4500); onLeave(() => clearInterval(t)); }
   }
-  const nb = document.getElementById('nearbox'), me = getPos();
-  const near = all.filter(p => p._d != null).sort((a, b) => a._d - b._d).slice(0, 3);
-  if (me && near.length) nb.innerHTML = `<div class="sec"><h2 class="sh">Près de vous</h2></div><div class="list" style="padding-bottom:6px">${near.map(rowHtml).join('')}</div>`;
+  function fit() { const sc = document.getElementById('scroll'); if (!sc) return; const rows = [...document.querySelectorAll('#recent .row2')]; rows.forEach(r => r.style.display = ''); for (let k = rows.length - 1; k >= 2 && sc.scrollHeight > sc.clientHeight + 2; k--) rows[k].style.display = 'none'; }
+  fit(); setTimeout(fit, 400); window.addEventListener('resize', fit); onLeave(() => window.removeEventListener('resize', fit));
 }
 const invite = () => `<div class="invite" style="margin:6px 0 10px"><span style="flex:none">${svg(I.share, 26, '#fff', 1.7)}</span><div style="flex:1;font-size:13px;line-height:1.35"><b>Bangui Guide, c’est mieux à plusieurs</b><div style="opacity:.8;font-size:12px;margin-top:2px">Fais découvrir l’app à tes proches.</div></div><button class="btn" id="inv">Inviter</button></div>`;

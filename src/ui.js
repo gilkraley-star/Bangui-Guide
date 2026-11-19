@@ -52,8 +52,8 @@ export function rowHtml(p) {
   return `<a class="row2 ${sp ? 'sp' : ''}" href="#/place/${p.id}" style="--cf:${c?.fg || '#8A90A3'}">${photoBox(p, 'th2', 26, true)}<div class="bd">
     <span class="nm">${esc(p.name)}</span>
     <div class="sub" style="margin:0"><span style="color:${c?.fg || '#8A90A3'};font-weight:600">${esc(c?.label || p.category)}</span>${p.area ? ' · ' + esc(p.area) : ''}</div>
-    <div class="tags">${sp ? spBadge() : ''}${p.verified ? `<span class="pill" style="background:#EAF8EF;color:#1E7A43">${svg(I.check, 10, '#1E7A43', 3)} Vérifié</span>` : ''}${p._r != null ? `<span class="pill" style="background:#FFF6E0;color:#B5560C">★ ${Number(p._r).toFixed(1)}</span>` : ''}</div></div>
-    <div class="rt">${p._d != null ? `<span class="dist">${svg(PIN, 12, '#2A4A8A', 2.2)} ${fmtD(p._d)}</span>` : ''}<span style="color:#9AA0B4">${svg(I.chev, 18)}</span></div></a>`;
+    <div class="tags">${sp ? spBadge() : ''}${p.verified ? `<span class="pill" style="background:#EAF8EF;color:#1E7A43">${svg(I.check, 10, '#1E7A43', 3)} Vérifié</span>` : ''}</div></div>
+    <div class="rt">${p._d != null ? `<span class="dist">${svg(PIN, 12, '#E2541F', 2.4)} ${fmtD(p._d)}</span>` : ''}<span class="rt2">★ ${p._r != null ? Number(p._r).toFixed(1) : 'Nouveau'}${p._r != null && p._n ? `<i>(${p._n})</i>` : ''}</span><span class="chv" style="color:#9AA0B4">${svg(I.chev, 18)}</span></div></a>`;
 }
 
 /* illustration vectorielle de Bangui (hero) */
