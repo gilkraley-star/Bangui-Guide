@@ -268,3 +268,15 @@ html,body{background:#1B4FCB}
 #tabc .itm,#tabc .rv{flex:none;width:82%;background:#fff;border-radius:16px;padding:10px 12px;align-self:stretch;box-shadow:0 6px 16px rgba(20,30,90,.14)}
 .hz .row2{max-height:360px;align-self:center}.hz .th2{flex:none;height:190px;min-height:0}
 .hz .th2{height:190px!important;flex:none!important}
+/* ===== corrections V5.1 ===== */
+.hz .row2{align-self:stretch!important;max-height:470px!important;margin-bottom:6px}
+.hz .th2{flex:1 1 0!important;height:auto!important;min-height:150px!important}
+.hz .rt{background:none!important;padding:0!important;top:16px!important;right:16px!important}
+.hz .rt .dist{background:rgba(255,255,255,.95);border-radius:999px;padding:4px 10px;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.nov .dph{height:150px}.nov .sheet2{margin-top:-10px}
+.btn.sec2{background:#fff;color:#1E3F7A;box-shadow:0 0 0 1.5px #B9CCF5 inset,0 4px 10px rgba(20,40,110,.12)}
+#tabc .icd{align-self:flex-start}#tabc .icd .pr{white-space:nowrap;font-size:13px}
+.tabs button{font-size:11.5px;min-width:60px}
+.hz .row2{max-height:400px!important;align-self:center!important}.hz .th2{flex:none!important;height:250px!important;min-height:0!important}
+.nov .sheet2{margin-top:0}.nov .dph{margin-bottom:10px}
+#tabc .icd{align-self:stretch;max-height:330px;display:flex;flex-direction:column}#tabc .icd .ti{flex:1 1 0;min-height:120px;height:auto}#tabc .icd .tx{flex:none}
