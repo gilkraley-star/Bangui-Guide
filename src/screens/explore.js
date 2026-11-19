@@ -7,7 +7,7 @@ export async function search(params) {
   shell(`<div class="hero safe-top" style="padding-bottom:34px"><h1 style="font-size:22px">Explorer</h1><div style="font-size:12.5px;opacity:.8;margin-top:4px">Tous les lieux de Bangui</div></div>
     <div class="sbar"><span>${svg(I.search, 18, '#8A90A3')}</span><input id="q" type="search" placeholder="Nom, quartier, adresse…" value="${esc(q)}"></div>
     <div class="fchips"><button class="fc" id="nearbtn">${svg(I.pin, 13, 'currentColor', 2.2)} Plus proches</button><button class="fc ${cat ? '' : 'on'}" data-c="">Tous</button>${CATS.map(c => `<button class="fc ${cat === c.id ? 'on' : ''}" data-c="${c.id}">${esc(c.label)}</button>`).join('')}</div>
-    <div class="list hz" id="res"></div>`, 'search');
+    <div class="cnt" id="cnt"></div><div class="list hz hz2" id="res"></div>`, 'search');
   const res = document.getElementById('res'), qi = document.getElementById('q'); let t, seq = 0;
   const run = async () => {
     if (!configured) { res.innerHTML = notConfigured(); return; }
@@ -21,6 +21,7 @@ export async function search(params) {
     let a = withDist(await attachStats(data)); if (my !== seq) return;
     a = nearOn ? a.sort((x, y) => (x._d ?? 1e9) - (y._d ?? 1e9)) : sortSp(a);
     res.innerHTML = a.length ? a.map(rowHtml).join('') : '<div class="empty">Aucun résultat.</div>';
+    document.getElementById('cnt').textContent = a.length ? `${a.length} lieu${a.length > 1 ? 'x' : ''} · glisse vers la gauche pour en voir plus →` : '';
   };
   qi.oninput = () => { clearTimeout(t); t = setTimeout(run, 300); };
   document.getElementById('nearbtn').onclick = async e => { const b = e.currentTarget; if (!nearOn && !getPos() && !(await locate())) return; nearOn = !nearOn; b.classList.toggle('on', nearOn); run(); };
@@ -34,7 +35,7 @@ export function categories() {
 }
 
 export async function favsPage() {
-  shell(`<div class="hero safe-top" style="padding-bottom:30px"><h1 style="font-size:22px">Mes favoris</h1></div><div class="list hz" id="fl"></div>`, 'profil');
+  shell(`<div class="hero safe-top" style="padding-bottom:30px"><h1 style="font-size:22px">Mes favoris</h1></div><div class="list hz hz2" id="fl"></div>`, 'profil');
   const ids = favs.get(), fl = document.getElementById('fl');
   if (!ids.length) { fl.innerHTML = '<div class="empty">Aucun favori. Touche le cœur sur la fiche d’un lieu pour le retrouver ici.</div>'; return; }
   if (!configured) { fl.innerHTML = notConfigured(); return; }
