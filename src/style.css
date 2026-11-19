@@ -320,3 +320,14 @@ html,body{background:#F4F7FF}
 .homec .th2{width:112px;height:42px;border-radius:9px}.homec .row2 .pill{display:none}
 .homec .row2{padding:3px 8px 3px 3px}.homec .row2 .rt span{color:#0F2A6B}
 .homec .gi i{width:30px;height:30px}.homec .gi{min-height:54px}
+
+/* ===== V7.1 : en-tête réduit, marges et textes harmonisés (16px) ===== */
+.homec .hero2{height:172px}.homec .greet{bottom:36px}
+.homec .sbar2{margin:-22px 16px 0}
+.homec .grid{padding:10px 16px 6px}.homec .zones{padding:2px 16px 8px}.homec .bnr{padding:0 16px}.homec .sec{padding:0 16px}.homec .list{padding:0 16px}
+.homec .gi{font-size:10.5px}.homec .sec h2{font-size:16px}
+.homec .row2 .nm{font-size:14px}.homec .row2 .sub,.homec .row2 .bd>div{font-size:12px}
+.homec .banner{height:86px}
+.homec .banner .bb{font-weight:800}
+.bdg{background:#FF8A1F!important;color:#fff!important}
+.homec .gi{font-size:9.8px;letter-spacing:-.15px;padding-left:0;padding-right:0;white-space:nowrap}.homec .gi:nth-child(10){white-space:normal}

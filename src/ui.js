@@ -14,7 +14,7 @@ export const stars = (v, s = 14) => { const full = Math.round((v || 0) * 2) / 2;
 /* image du lieu ou illustration du secteur */
 const FALLBACK = [['mairie', 'img/mairie.jpg', 'img/mairie-hero.jpg'], ['cath', 'img/cathedrale.jpg'], ['afrique', 'img/notre-dame-afrique.jpg'], ['mosqu', 'img/mosquee.jpg'],
   ['relais', 'img/restaurant.jpg', 'img/relais-hero.jpg'], ['résidence', 'img/hotel-thumb.jpg', 'img/hotel-hero.jpg'], ['shopping', 'img/shop-hero.jpg', 'img/shop-hero.jpg'],
-  ['pharmacie centrale', 'img/pharmacie.jpg'], ['boulangerie', 'img/boulangerie.jpg'], ['total', 'img/station.jpg']];
+  ['pharmacie centrale', 'img/pharmacie.jpg'], ['boulangerie', 'img/boulangerie.jpg'], ['total', 'img/station-total.jpg'], ['amiti', 'img/hopital-amitie.jpg'], ['bicica', 'img/bicica.jpg']];
 const ITEMPH = [['poulet', 'plat-poulet'], ['bœuf', 'plat-boeuf'], ['boeuf', 'plat-boeuf'], ['poisson', 'plat-poisson'], ['standard', 'chambre-standard'], ['confort', 'chambre-confort'], ['suite', 'suite'], ['portable', 'prod-pc'], ['smartphone', 'prod-phone'], ['imprimante', 'prod-imprimante']];
 const fb = p => FALLBACK.find(([k]) => (p.name || '').toLowerCase().includes(k));
 export const photoOf = p => p.photo_url || fb(p)?.[1] || null;
