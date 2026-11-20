@@ -1,4 +1,4 @@
-import { esc, svg, I, CI, sb, configured, withDist, getPos, locate, attachStats, sortSp, favs, isSponsored, fmtD, openNow } from '../core.js';
+import { esc, svg, I, CI, sb, configured, withDist, getPos, locate, attachStats, sortSp, favs, swr, fetchPlaces, cacheGet, isSponsored, fmtD, openNow } from '../core.js';
 import { CATS, CAT } from '../data.js';
 import { shell, rowHtml, skel, errBox, notConfigured, brand, photoOf, heroOf } from '../ui.js';
 
@@ -25,20 +25,24 @@ export async function search(params) {
   const res = document.getElementById('res'), qi = document.getElementById('q'); let t, seq = 0;
   const run = async () => {
     if (!configured) { res.innerHTML = notConfigured(); return; }
-    const my = ++seq; res.innerHTML = Array.from({ length: 4 }, () => '<div class="xc"><div class="xp sk"></div><div class="xn sk" style="height:16px;margin:10px 12px"></div></div>').join('');
-    let query = sb.from('places').select('*').eq('status', 'published').order('verified', { ascending: false }).order('name').limit(80);
-    if (cat) query = query.eq('category', cat);
-    const term = qi.value.trim().replace(/[%,()]/g, ' ');
-    if (term) query = query.or(`name.ilike.%${term}%,area.ilike.%${term}%,address.ilike.%${term}%`);
-    const { data, error } = await query; if (my !== seq) return;
-    if (error) { res.innerHTML = errBox(error); return; }
-    let a = withDist(await attachStats(data)); if (my !== seq) return;
-    if (sort === 'open') a = a.filter(p => p.on_duty || openNow(p.hours) !== false);
-    a = sort === 'dist' ? a.sort((x, y) => (x._d ?? 1e9) - (y._d ?? 1e9)) : sort === 'note' ? a.sort((x, y) => (y._r ?? -1) - (x._r ?? -1)) : sortSp(a);
-    res.innerHTML = a.length ? a.map(cardHtml).join('') : '<div class="empty" style="grid-column:1/3">Aucun résultat.</div>';
-    bindCards(res);
-    const lb = cat ? (CAT[cat]?.label || 'lieux').toLowerCase() : 'lieux';
-    document.getElementById('cnt').textContent = `${a.length} ${a.length > 1 || !cat ? lb : lb.replace(/s$/, '')} à Bangui`;
+    const my = ++seq, term = qi.value.trim().replace(/[%,()]/g, ' ');
+    const key = 'ex_' + cat + '_' + term;
+    if (cacheGet(key) == null) res.innerHTML = Array.from({ length: 4 }, () => '<div class="xc"><div class="xp sk"></div><div class="xn sk" style="height:16px;margin:10px 12px"></div></div>').join('');
+    const load = () => { let query = sb.from('places').select('*').eq('status', 'published').order('verified', { ascending: false }).order('name').limit(80);
+      if (cat) query = query.eq('category', cat);
+      if (term) query = query.or(`name.ilike.%${term}%,area.ilike.%${term}%,address.ilike.%${term}%`);
+      return fetchPlaces(query); };
+    await swr(key, load, (data, info) => {
+      if (my !== seq) return;
+      if (!data) { res.innerHTML = errBox(info.error); return; }
+      let a = withDist(data);
+      if (sort === 'open') a = a.filter(p => p.on_duty || openNow(p.hours) !== false);
+      a = sort === 'dist' ? a.sort((x, y) => (x._d ?? 1e9) - (y._d ?? 1e9)) : sort === 'note' ? a.sort((x, y) => (y._r ?? -1) - (x._r ?? -1)) : sortSp(a);
+      res.innerHTML = a.length ? a.map(cardHtml).join('') : '<div class="empty" style="grid-column:1/3">Aucun résultat.</div>';
+      bindCards(res);
+      const lb = cat ? (CAT[cat]?.label || 'lieux').toLowerCase() : 'lieux';
+      document.getElementById('cnt').textContent = `${a.length} ${a.length > 1 || !cat ? lb : lb.replace(/s$/, '')} à Bangui`;
+    });
   };
   qi.oninput = () => { clearTimeout(t); t = setTimeout(run, 300); };
   document.getElementById('srt').onchange = e => { sort = e.target.value; run(); };

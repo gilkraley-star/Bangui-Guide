@@ -135,3 +135,42 @@ export async function cachedQuery(key, run) {
   try { const r = await Promise.race([run(), new Promise((_, rej) => setTimeout(() => rej(new Error('Connexion trop lente')), 12000))]); if (!r.error) { try { localStorage.setItem('bgc_' + key, JSON.stringify(r.data)); } catch { } return r; } throw r.error; }
   catch (e) { try { const d = JSON.parse(localStorage.getItem('bgc_' + key) || 'null'); if (d) return { data: d, error: null, stale: true }; } catch { } return { data: null, error: e }; }
 }
+
+/* Cache d'abord, réseau ensuite : affiche tout de suite les dernières données connues,
+   puis remplace automatiquement par les nouvelles dès qu'elles arrivent. */
+const tmo = (ms) => new Promise((_, rej) => setTimeout(() => rej(new Error('Connexion trop lente')), ms));
+export const cacheGet = k => { try { return JSON.parse(localStorage.getItem('bgc_' + k) || 'null'); } catch { return null; } };
+export const cacheSet = (k, d) => { try { localStorage.setItem('bgc_' + k, JSON.stringify(d)); } catch { } };
+export async function swr(key, run, render, ms = 20000) {
+  const cached = cacheGet(key);
+  if (cached != null) render(cached, { stale: true });
+  try {
+    const d = await Promise.race([run(), tmo(ms)]);
+    if (d == null) throw new Error('Aucune donnée');
+    cacheSet(key, d);
+    if (JSON.stringify(d) !== JSON.stringify(cached)) render(d, { stale: false });
+    return d;
+  } catch (e) { if (cached == null) render(null, { error: e }); return cached; }
+}
+export const fetchPlaces = async q => { const r = await q; if (r.error) throw r.error; return attachStats(r.data); };
+
+/* Préchargement : au lancement, mémorise tous les lieux, catalogues et avis pour que
+   les fiches s'ouvrent instantanément (même avec une connexion lente ou coupée). */
+export async function warmup() {
+  if (!configured) return;
+  const last = +(localStorage.getItem('bgc_warm') || 0); if (Date.now() - last < 120000) return;
+  try {
+    const pr = await sb.from('places').select('*').eq('status', 'published').order('name').limit(500); if (pr.error) return;
+    const places = await attachStats(pr.data);
+    const [it, rv] = await Promise.all([sb.from('place_items').select('*').limit(3000), sb.from('reviews').select('*').order('created_at', { ascending: false }).limit(2000)]);
+    const gi = {}, gr = {}; (it.data || []).forEach(x => (gi[x.place_id] ||= []).push(x)); (rv.data || []).forEach(x => ((gr[x.place_id] ||= []).length < 50) && gr[x.place_id].push(x));
+    const bare = places.map(({ _r, _n, ...p }) => p);
+    bare.forEach(p => cacheSet('place_' + p.id, { p, its: (gi[p.id] || []).sort((a, b) => (a.created_at || '') < (b.created_at || '') ? -1 : 1), reviews: gr[p.id] || [] }));
+    cacheSet('ex__', places); cacheSet('home', places.slice().sort((a, b) => (a.created_at < b.created_at ? 1 : -1)).slice(0, 60));
+    for (const c of new Set(places.map(p => p.category))) cacheSet('ex_' + c + '_', places.filter(p => p.category === c));
+    cacheSet('map', places.filter(p => p.lat != null && p.lng != null));
+    localStorage.setItem('bgc_warm', String(Date.now()));
+    const urls = [...new Set(places.flatMap(p => [p.photo_url, ...(p.photos || [])]).filter(u => u && /^https?:/.test(u)))].slice(0, 60);
+    urls.forEach((u, i) => setTimeout(() => { const im = new Image(); im.src = u; }, i * 150));
+  } catch { }
+}

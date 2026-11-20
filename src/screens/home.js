@@ -1,4 +1,4 @@
-import { esc, svg, I, CI, sb, configured, withDist, getPos, locate, attachStats, cachedQuery, sortSp, isSponsored, toast } from '../core.js';
+import { esc, svg, I, CI, sb, configured, withDist, getPos, locate, attachStats, swr, fetchPlaces, sortSp, isSponsored, toast } from '../core.js';
 import { CATS, CAT, QUARTIERS } from '../data.js';
 import { shell, brand, rowHtml, skel, errBox, notConfigured, photoBox, spBadge, stars, onLeave } from '../ui.js';
 
@@ -26,11 +26,8 @@ export async function home() {
   document.getElementById('sf').onsubmit = e => { e.preventDefault(); location.hash = '#/search?q=' + encodeURIComponent(document.getElementById('q').value.trim()); };
   const recent = document.getElementById('recent');
   if (!configured) { recent.innerHTML = notConfigured(); return; }
-  const { data, error, stale } = await cachedQuery('home', () => sb.from('places').select('*').eq('status', 'published').order('created_at', { ascending: false }).limit(60));
-  if (stale) toast('Hors connexion : données enregistrées');
-  if (error) { recent.innerHTML = errBox(error); return; }
-  const all = withDist(await attachStats(data));
-  let zone = 'Tous';
+  let all = [], zone = 'Tous', t0;
+  const paint = () => {
   const draw = () => {
     document.getElementById('zones').innerHTML = ZONES.map(z => `<button class="zc ${z === zone ? 'on' : ''}" data-z="${z}">${z === 'Tous' ? svg('<path d="M12 3v3M12 18v3M3 12h3M18 12h3M6 6l2 2M16 16l2 2M6 18l2-2M16 8l2-2"/>', 15, 'currentColor', 2) : svg(I.pin, 15, '#E2541F', 2)} ${z}</button>`).join('')
       + `<a class="zc" href="#/search" aria-label="Filtres">${svg(I.sliders, 16)}</a>`;
@@ -49,8 +46,14 @@ export async function home() {
       <div class="dots" id="dots">${feat.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>`;
     const b = document.getElementById('bnr'), dots = [...document.querySelectorAll('#dots i')];
     b.addEventListener('scroll', () => { const i = Math.round(b.scrollLeft / b.clientWidth); dots.forEach((d, k) => d.classList.toggle('on', k === i)); }, { passive: true });
-    if (feat.length > 1) { const t = setInterval(() => { const n = (Math.round(b.scrollLeft / b.clientWidth) + 1) % feat.length; b.scrollTo({ left: n * b.clientWidth, behavior: 'smooth' }); }, 4500); onLeave(() => clearInterval(t)); }
+    if (feat.length > 1) { clearInterval(t0); const t = t0 = setInterval(() => { const n = (Math.round(b.scrollLeft / b.clientWidth) + 1) % feat.length; b.scrollTo({ left: n * b.clientWidth, behavior: 'smooth' }); }, 4500); onLeave(() => clearInterval(t)); }
   }
+  setTimeout(fit, 50);
+  };
+  await swr('home', () => fetchPlaces(sb.from('places').select('*').eq('status', 'published').order('created_at', { ascending: false }).limit(60)), (data, info) => {
+    if (!data) { recent.innerHTML = errBox(info.error); return; }
+    all = withDist(data); paint();
+  });
   function fit() { const sc = document.getElementById('scroll'); if (!sc) return; const rows = [...document.querySelectorAll('#recent .row2')]; rows.forEach(r => r.style.display = ''); for (let k = rows.length - 1; k >= 2 && sc.scrollHeight > sc.clientHeight + 2; k--) rows[k].style.display = 'none'; }
   fit(); setTimeout(fit, 400); window.addEventListener('resize', fit); onLeave(() => window.removeEventListener('resize', fit));
 }

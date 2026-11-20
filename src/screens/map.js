@@ -1,6 +1,6 @@
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { esc, svg, I, catPath, sb, configured, withDist, locate, getPos, attachStats, toast } from '../core.js';
+import { esc, svg, I, catPath, sb, configured, withDist, locate, getPos, attachStats, swr, fetchPlaces, toast } from '../core.js';
 import { CAT, CATS } from '../data.js';
 import { shell, rowHtml, onLeave, notConfigured } from '../ui.js';
 
@@ -23,9 +23,7 @@ export async function mapScreen() {
   document.getElementById('me').onclick = goMe; document.getElementById('mnv').onclick = goMe;
   document.getElementById('zi').onclick = () => map.zoomIn(); document.getElementById('zo').onclick = () => map.zoomOut();
   if (!configured) { toast('Serveur non configuré'); return; }
-  const { data, error } = await sb.from('places').select('*').eq('status', 'published').not('lat', 'is', null).not('lng', 'is', null).limit(500);
-  if (error) { toast('Impossible de charger les lieux'); return; }
-  if (!data.length) toast('Aucun lieu avec position GPS pour l’instant');
+  let data = [];
   const card = document.getElementById('mcard'); let cat = '', term = '', layer = L.layerGroup().addTo(map), first = true;
   const draw = () => {
     layer.clearLayers();
@@ -41,5 +39,5 @@ export async function mapScreen() {
   document.getElementById('mq').oninput = e => { term = e.target.value.trim().toLowerCase(); draw(); };
   document.getElementById('mf').onclick = () => document.getElementById('mch').scrollBy({ left: 160, behavior: 'smooth' });
   map.on('click', () => { card.style.display = 'none'; });
-  draw();
+  await swr('map', () => fetchPlaces(sb.from('places').select('*').eq('status', 'published').not('lat', 'is', null).not('lng', 'is', null).limit(500)), (d, info) => { if (!d) { toast('Impossible de charger les lieux'); return; } data = d; draw(); });
 }

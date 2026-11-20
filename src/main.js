@@ -2,7 +2,7 @@ import './style.css';
 import { App as CapApp } from '@capacitor/app';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { SplashScreen } from '@capacitor/splash-screen';
-import { configured } from './core.js';
+import { configured, warmup } from './core.js';
 import { runLeave } from './ui.js';
 import { home } from './screens/home.js';
 import { search, categories, favsPage } from './screens/explore.js';
@@ -46,3 +46,4 @@ route();
 /* retour tactile : léger tremblement sur les boutons, onglets, cartes */
 document.addEventListener('pointerdown', e => { if (e.target.closest('.btn,.nav a,.gi,.row2,.zc,.fc,.back,.tabs button,.cv')) Haptics.impact({ style: ImpactStyle.Light }).catch(() => { }); }, { passive: true });
 setTimeout(() => SplashScreen.hide({ fadeOutDuration: 250 }).catch(() => { }), 350);
+setTimeout(warmup, 2500); document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(warmup, 500); });

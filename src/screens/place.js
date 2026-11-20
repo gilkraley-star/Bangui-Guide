@@ -1,4 +1,4 @@
-import { esc, svg, I, CI, PIN, catPath, sb, configured, getProfile, requireLogin, favs, toast, fmtPrice, withDist, attachStats, isSponsored, fmtD, logEvent, waLink, openNow } from '../core.js';
+import { esc, svg, I, CI, PIN, catPath, sb, configured, getProfile, requireLogin, favs, toast, fmtPrice, withDist, attachStats, swr, isSponsored, fmtD, logEvent, waLink, openNow } from '../core.js';
 import { CAT } from '../data.js';
 import { sectorBody, statusRow, heroCarousel, CTAS, ctaIcon, TABNAME, ABOUT } from '../sector.js';
 import { $app, onLeave, photoBox, itemPhoto, heroOf, spBadge, stars, errBox, notConfigured, brand, plain, topbar, bindBack, rowHtml } from '../ui.js';
@@ -17,17 +17,25 @@ const TAG_ICON = {
 export const PRESET_TAGS = Object.keys(TAG_ICON);
 const tagChip = t => `<span>${svg(TAG_ICON[t] || I.check, 22, '#1E6BE0', 1.8)}${esc(t)}</span>`;
 
-export async function place(id) {
-  plain(`<div class="dtop"><div class="dbar"><button class="back" id="back">${svg(I.back, 20)}</button>${brand}<span style="width:38px"></span></div></div><div class="sheet2"><div class="sk" style="height:150px;border-radius:20px"></div></div>`); bindBack();
-  if (!configured) { plain(topbar('Lieu') + notConfigured()); bindBack(); return; }
-  const [{ data: p, error }, items, revs, prof] = await Promise.all([
-    sb.from('places').select('*').eq('id', id).maybeSingle(),
-    sb.from('place_items').select('*').eq('place_id', id).order('created_at'),
-    sb.from('reviews').select('*').eq('place_id', id).order('created_at', { ascending: false }).limit(50),
-    getProfile().catch(() => null)
-  ]);
-  if (error || !p) { plain(topbar('Lieu') + (error ? errBox(error) : '<div class="empty">Lieu introuvable.</div>')); bindBack(); return; }
-  const its = items.data || [], reviews = revs.data || [];
+async function fetchPlace(id) {
+  const [a, b, c] = await Promise.all([sb.from('places').select('*').eq('id', id).maybeSingle(), sb.from('place_items').select('*').eq('place_id', id).order('created_at'), sb.from('reviews').select('*').eq('place_id', id).order('created_at', { ascending: false }).limit(50)]);
+  if (a.error) throw a.error; if (!a.data) return { p: null, its: [], reviews: [] };
+  return { p: a.data, its: b.data || [], reviews: c.data || [] };
+}
+export async function place(id, pre) {
+  if (!pre) {
+    if (!configured) { plain(topbar('Lieu') + notConfigured()); bindBack(); return; }
+    let first = true, shown = false;
+    plain(`<div class="dtop"><div class="dbar"><button class="back" id="back">${svg(I.back, 20)}</button>${brand}<span style="width:38px"></span></div></div><div class="sheet2"><div class="sk" style="height:150px;border-radius:20px"></div></div>`); bindBack();
+    await swr('place_' + id, () => fetchPlace(id), async (d, info) => {
+      if (location.hash !== '#/place/' + id) return;
+      if (!d) { plain(topbar('Lieu') + errBox(info.error)); bindBack(); return; }
+      shown = true; await place(id, d);
+    });
+    return;
+  }
+  const prof = await getProfile().catch(() => null), { p, its, reviews } = pre;
+  if (!p) { plain(topbar('Lieu') + '<div class="empty">Lieu introuvable.</div>'); bindBack(); return; }
   const n = reviews.length, avg = n ? reviews.reduce((s, r) => s + r.rating, 0) / n : null;
   const c = CAT[p.category] || { fg: '#3A3F52', bg: '#F1F2F6', label: p.category }, isFav = favs.get().includes(p.id), sp = isSponsored(p);
   const itemInfo = [TABNAME[p.category] || 'Services'], tabs = [];
