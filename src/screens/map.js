@@ -5,6 +5,21 @@ import { CAT, CATS } from '../data.js';
 import { shell, rowHtml, onLeave, notConfigured } from '../ui.js';
 
 const PIN_COL = { restaurant: '#E5301F', hotel: '#1E6BE0', pharmacie: '#1FA64D', commerce: '#9B2FC9', banque: '#1E6BE0', admin: '#F5841F', culte: '#6B7185', hopital: '#E5301F', universite: '#1E3A8A', transport: '#0E9AA7', btp: '#E2541F', station: '#1E6BE0', voyage: '#0E9AA7' };
+const TILE_CACHE = 'bg-tiles-v1';
+const CachedTiles = L.TileLayer.extend({
+  createTile(coords, done) {
+    const img = document.createElement('img'), url = this.getTileUrl(coords); img.alt = '';
+    const plain = () => { img.onload = () => done(null, img); img.onerror = () => done(null, img); img.src = url; };
+    (async () => {
+      try {
+        const c = await caches.open(TILE_CACHE); let r = await c.match(url);
+        if (!r) { r = await fetch(url, { mode: 'cors' }); if (!r.ok) throw 0; c.put(url, r.clone()); }
+        const u = URL.createObjectURL(await r.blob()); img.onload = () => { URL.revokeObjectURL(u); done(null, img); }; img.onerror = () => done(null, img); img.src = u;
+      } catch { plain(); }
+    })();
+    return img;
+  }
+});
 export async function mapScreen() {
   shell(`<div class="xhd mp safe-top"><i style="background-image:linear-gradient(90deg,#14307F 0,rgba(20,48,127,0) 55%),url('img/hd-monument.jpg')"></i><div class="mpb"><img src="logo.png" alt=""><span class="wm">Bangui <i>Guide</i></span></div><p>Explorez Bangui, trouvez facilement<br>les meilleurs lieux</p></div>
     <div class="xsb mpsb"><span>${svg(I.search, 22, '#142A52', 2)}</span><input id="mq" type="search" placeholder="Rechercher un lieu, un établissement, un quartier…"><button id="mf" aria-label="Filtres">${svg('<path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>', 22, '#142A52', 2)}</button></div>
@@ -13,7 +28,7 @@ export async function mapScreen() {
   document.getElementById('scroll').classList.add('maps');
   const me = getPos();
   const map = L.map('map', { zoomControl: false, attributionControl: true }).setView(me ? [me.lat, me.lng] : [4.3947, 18.5582], me ? 14 : 13);
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
+  new CachedTiles('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, keepBuffer: 4, attribution: '© OpenStreetMap' }).addTo(map);
   onLeave(() => map.remove());
   setTimeout(() => map.invalidateSize(), 200);
   let meMarker;
