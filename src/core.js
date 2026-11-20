@@ -46,7 +46,7 @@ export const CI = {
 export const catPath = id => CI[id] || PIN;
 export const toast = t => { const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 2600); };
 export const favs = { get: () => { try { return JSON.parse(localStorage.getItem('bg_favs') || '[]'); } catch { return []; } }, set: a => localStorage.setItem('bg_favs', JSON.stringify(a)) };
-export const fmtPrice = (n, u) => n == null || n === '' ? '' : `${Number(n).toLocaleString('fr-FR')} FCFA${u ? ' / ' + u : ''}`;
+export const fmtPrice = (n, u) => n == null || n === '' ? '' : `${String(Math.round(Number(n))).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f')} FCFA${u ? ' / ' + u : ''}`;
 export const fmtTime = iso => { const d = new Date(iso), n = new Date(); const same = d.toDateString() === n.toDateString(); const y = new Date(n - 864e5).toDateString() === d.toDateString(); return same ? d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : y ? 'Hier' : d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }); };
 export const isSponsored = p => p.sponsored && (!p.sponsored_until || new Date(p.sponsored_until) > new Date());
 export const sortSp = a => [...a].sort((x, y) => isSponsored(y) - isSponsored(x));
@@ -132,6 +132,6 @@ export function openNow(h, now = new Date()) {
   return known ? false : null;
 }
 export async function cachedQuery(key, run) {
-  try { const r = await run(); if (!r.error) { try { localStorage.setItem('bgc_' + key, JSON.stringify(r.data)); } catch { } return r; } throw r.error; }
+  try { const r = await Promise.race([run(), new Promise((_, rej) => setTimeout(() => rej(new Error('Connexion trop lente')), 12000))]); if (!r.error) { try { localStorage.setItem('bgc_' + key, JSON.stringify(r.data)); } catch { } return r; } throw r.error; }
   catch (e) { try { const d = JSON.parse(localStorage.getItem('bgc_' + key) || 'null'); if (d) return { data: d, error: null, stale: true }; } catch { } return { data: null, error: e }; }
 }

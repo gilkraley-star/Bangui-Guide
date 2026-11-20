@@ -569,10 +569,13 @@ img{content-visibility:auto}
 .fiche .sxb .sxi.sm,.fiche .sxf .sxi.sm{width:30px;height:30px;border-radius:9px}.fiche .sxb .sxi.sm svg,.fiche .sxf .sxi.sm svg{width:18px;height:18px}
 .fiche .sxb small,.fiche .sxf small{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .fiche .sxb b,.fiche .sxf b{font-size:12.5px}
-@media (max-height:790px){
-.fiche .dph{height:84px;transform:translateY(12px)}.fiche .sheet2{padding-top:18px}.fiche .ph{height:46px}.fiche .sxrooms .ph{height:52px}.fiche .sxdish .ph{height:46px}
-.fiche .acts{margin:5px 0}.fiche .acts .btn{padding:7px 2px;font-size:12px}.fiche .tabs button svg{display:none}.fiche .tabs button{padding:8px 4px}
-.fiche .sxi{width:36px;height:36px}.fiche .sxi svg{width:20px;height:20px}.fiche .sxb small,.fiche .sxf small,.fiche .sxs small{display:none}
-.fiche .sxfu{gap:2px;padding:6px 4px}.fiche .sxt small{display:none}.fiche .cta .btn{height:42px}.fiche .sxs{padding:6px}
-}
-@media (max-height:690px){.fiche .dph{height:60px}.fiche .ph{height:34px}.fiche .sxrooms .ph{height:38px}.fiche .sheet2 .ib{display:none}.fiche .sxam>div span,.fiche .sxstrip>div span{display:none}}
+@media (max-height:690px){.fiche .ph{height:36px}.fiche .sxrooms .ph{height:42px}.fiche .sheet2 .ib{display:none}.fiche .sxt small,.fiche .sxs small,.fiche .sxb small,.fiche .sxf small{display:none}}
+
+/* fiche : la photo du haut absorbe l'espace libre (jamais coupée, jamais de vide) */
+.fiche .dtop{flex:1 1 0!important;min-height:112px;max-height:270px;display:flex;flex-direction:column}
+.fiche .dtop .dph{flex:1 1 0;height:auto!important;min-height:0;transform:translateY(14px)}
+.fiche .sheet2{flex:0 1 auto!important;min-height:0}
+.fiche #tabc{flex:1 1 auto;min-height:0}
+.cdots{bottom:26px}.ccnt{bottom:22px}
+.xg{padding-top:6px}.nov>.xg,.nov>.mcl{-webkit-mask-image:linear-gradient(180deg,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(180deg,#000 calc(100% - 22px),transparent)}
+.xc.sp{margin:2px}

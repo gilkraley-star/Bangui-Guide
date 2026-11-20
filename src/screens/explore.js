@@ -10,7 +10,7 @@ export function cardHtml(p) {
   return `<a class="xc ${sp ? 'sp' : ''}" href="#/place/${p.id}"><div class="xp" style="background:${ph ? `center/cover url('${esc(ph)}')` : c.bg || '#EEF1F8'}"><span class="xh ${fv ? 'on' : ''}" data-f="${p.id}">${svg(I.heart, 19, fv ? '#E2541F' : '#142A52', 2).replace('fill="none"', fv ? 'fill="#E2541F"' : 'fill="none"')}</span>${ph ? '' : svg(CI[p.category] || I.pin, 40, c.fg || '#8A90A3', 1.6)}</div>
     <div class="xn"><b>${esc(p.name)}</b>${op != null ? `<i class="dot ${op ? 'on' : 'off'}"></i>` : ''}</div>
     <div class="xs">${esc(c.label)}${p.area ? ' <u>·</u> ' + esc(p.area) : ''}</div>
-    <div class="xr">${p.avg != null ? `${svg(I.star || '<path d="m12 2 3 7 7 .6-5.3 4.7 1.7 7.2L12 17.8 5.6 21.5l1.7-7.2L2 9.6 9 9z"/>', 18, '#FFB020', 0).replace('fill="none"', 'fill="#FFB020"')}<b>${p.avg.toFixed(1).replace('.', ',')}</b><span>(${p.n || 0} avis)</span>` : '<span>Nouveau</span>'}${p._d != null ? `<em>${fmtD(p._d)}</em>` : ''}</div>
+    <div class="xr">${p._r != null ? `${svg(I.star || '<path d="m12 2 3 7 7 .6-5.3 4.7 1.7 7.2L12 17.8 5.6 21.5l1.7-7.2L2 9.6 9 9z"/>', 18, '#FFB020', 0).replace('fill="none"', 'fill="#FFB020"')}<b>${Number(p._r).toFixed(1).replace('.', ',')}</b><span>(${p._n || 0} avis)</span>` : '<span>Nouveau</span>'}${p._d != null ? `<em>${fmtD(p._d)}</em>` : ''}</div>
     <div class="xt">${sp ? `<span class="xsp">${svg(I.crown, 13, '#fff', 2)} Sponsorisé</span>` : ''}${op != null ? `<span class="xo ${op ? 'on' : 'off'}">${svg('<path d="m5 12 5 5 9-10"/>', 14, 'currentColor', 3)} ${op ? 'Ouvert' : 'Fermé'}</span>` : ''}</div></a>`;
 }
 export const bindCards = root => root.querySelectorAll('[data-f]').forEach(h => h.onclick = e => { e.preventDefault(); e.stopPropagation(); const a = favs.get(), id = h.dataset.f, i = a.indexOf(id); i >= 0 ? a.splice(i, 1) : a.push(id); favs.set(a); h.classList.toggle('on', i < 0); const sv = h.querySelector('svg'); sv.setAttribute('fill', i < 0 ? '#E2541F' : 'none'); sv.setAttribute('stroke', i < 0 ? '#E2541F' : '#142A52'); });
@@ -34,7 +34,7 @@ export async function search(params) {
     if (error) { res.innerHTML = errBox(error); return; }
     let a = withDist(await attachStats(data)); if (my !== seq) return;
     if (sort === 'open') a = a.filter(p => p.on_duty || openNow(p.hours) !== false);
-    a = sort === 'dist' ? a.sort((x, y) => (x._d ?? 1e9) - (y._d ?? 1e9)) : sort === 'note' ? a.sort((x, y) => (y.avg ?? -1) - (x.avg ?? -1)) : sortSp(a);
+    a = sort === 'dist' ? a.sort((x, y) => (x._d ?? 1e9) - (y._d ?? 1e9)) : sort === 'note' ? a.sort((x, y) => (y._r ?? -1) - (x._r ?? -1)) : sortSp(a);
     res.innerHTML = a.length ? a.map(cardHtml).join('') : '<div class="empty" style="grid-column:1/3">Aucun résultat.</div>';
     bindCards(res);
     const lb = cat ? (CAT[cat]?.label || 'lieux').toLowerCase() : 'lieux';
@@ -45,6 +45,7 @@ export async function search(params) {
   document.getElementById('flt').onclick = () => { openOnly = !openOnly; const s = document.getElementById('srt'); s.value = openOnly ? 'open' : 'rel'; sort = s.value; run(); };
   document.getElementById('nearbtn').onclick = async e => { const b = e.currentTarget; if (sort !== 'dist' && !getPos() && !(await locate())) return; const on = sort !== 'dist'; sort = on ? 'dist' : 'rel'; document.getElementById('srt').value = sort; b.classList.toggle('on', on); run(); };
   document.querySelectorAll('.fc[data-c]').forEach(b => b.onclick = () => { cat = b.dataset.c; document.querySelectorAll('.fc[data-c]').forEach(x => x.classList.toggle('on', x === b)); run(); });
+  const on = document.querySelector('.xch .fc.on'); if (on) setTimeout(() => on.scrollIntoView({ inline: 'center', block: 'nearest' }), 50);
   run();
 }
 

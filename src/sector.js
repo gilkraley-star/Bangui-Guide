@@ -92,9 +92,9 @@ export function statusRow(p) {
   const cat = p.category, op = p.on_duty ? true : openNow(p.hours), tags = p.tags || [];
   const tg = re => tags.find(t => re.test(t));
   let chip = op == null ? null : [op ? 'on' : 'off', p.on_duty ? 'De garde aujourd’hui' : op ? (cat === 'hopital' ? 'Accueil ouvert' : /commerce|admin|btp|garage|salon|voyage|transport|banque/.test(cat) && !/24/.test(p.hours || '') ? 'Ouvert aujourd’hui' : 'Ouvert maintenant') : 'Fermé actuellement', P.check];
-  let right = fmtHours(p.hours), rIcon = P.clock;
+  let right = fmtHours(p.hours).replace(/(\d)h00/g, '$1h'), rIcon = P.clock;
   if (cat === 'universite' || cat === 'ecole') { const ins = tg(/inscription/i); if (ins) chip = ['on', ins, P.grad]; const an = tg(/ann[ée]e/i); if (an) { right = an; rIcon = P.cal; } }
-  if (op === false) right = nextOpen(p.hours) || right;
+  if (op === false) right = (nextOpen(p.hours) || right).replace(/(\d)h00/g, '$1h');
   if (cat === 'hopital' && /24h/.test(right)) right = '24h/24 – 7j/7';
   if (!chip && !right) return '';
   return `<div class="stline">${chip ? `<span class="stt ${chip[0]}">${chip[2] === P.check ? '<i></i>' : svg(chip[2], 16, 'currentColor', 2)}${esc(chip[1])}</span>` : ''}${right ? `<span class="sthr">${svg(rIcon, 19, '#4A5578', 1.8)}${esc(right)}</span>` : ''}</div>`;
