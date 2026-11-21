@@ -1,6 +1,7 @@
 import { esc, svg, I, sb, configured, getProfile, isStaff, toast, pickPhoto, getGps, uploadPhoto, removeStored } from '../core.js';
 import { CATS, CAT, QUARTIERS } from '../data.js';
 import { SECTAGS, MGR, MGR_DEFAULT } from '../sector.js';
+import { billingSheet, money } from '../billing.js';
 import { plain, bindBack, errBox, notConfigured, photoBox } from '../ui.js';
 
 /* ---------- file d'attente hors connexion (IndexedDB : pas de limite de 5 Mo comme localStorage) ---------- */
@@ -72,6 +73,7 @@ export async function agent() {
   const { data, error } = await sb.from('places').select('*').eq('created_by', prof.uid).order('created_at', { ascending: false }).limit(100);
   const box = document.getElementById('mine');
   if (error) { box.innerHTML = errBox(error); return; }
+  let dueMap = {}; try { const { data: iv } = await sb.from('invoices').select('place_id,amount').eq('status', 'due').in('place_id', data.map(x => x.id)); (iv || []).forEach(x => { dueMap[x.place_id] = (dueMap[x.place_id] || 0) + x.amount; }); } catch { }
   const n = s => data.filter(p => p.status === s).length;
   document.getElementById('ast').innerHTML = [['Enregistrés', data.length, '#142A52'], ['En attente', n('pending'), '#E2541F'], ['Publiés', n('published'), '#1FA64D'], ['Refusés', n('rejected'), '#C23B3B']].map(([l, v, c]) => `<div style="border-left:4px solid ${c}"><b>${v}</b><span>${l}</span></div>`).join('');
   document.getElementById('acount').textContent = data.length;
@@ -79,9 +81,11 @@ export async function agent() {
     const s = STAT[p.status] || STAT.pending, edit = p.status !== 'published';
     return `<a class="card2" href="${p.status === 'published' ? '#/place/' + p.id : '#/agent/edit/' + p.id}" style="display:flex;gap:12px;text-decoration:none;color:inherit;align-items:flex-start">${photoBox(p, 'th2', 24)}<div class="mgin"><b>${esc(p.name)}</b><small>${esc(CAT[p.category]?.label || p.category)}${p.area ? ' · ' + esc(p.area) : ''}</small>
       <div style="margin-top:5px"><span class="pill" style="background:${s[1]};color:${s[2]}">${s[0]}</span>${edit ? '<span class="sub" style="margin-left:8px">Toucher pour modifier</span>' : ''}</div>
+      ${p.status === 'published' || dueMap[p.id] ? `<button type="button" class="btn ghost" data-bl="${p.id}" style="margin-top:8px;padding:8px 10px;font-size:12.5px;${dueMap[p.id] ? 'color:#E2541F;border-color:#E2541F' : ''}">${dueMap[p.id] ? 'À encaisser : ' + money(dueMap[p.id]) : 'Factures'}</button>` : ''}
       ${p.owner_id ? `<button type="button" class="btn ghost" data-rp="${p.id}" style="margin-top:8px;padding:8px 10px;font-size:12.5px">Mot de passe oublié par le client ?</button>` : ''}
       ${p.status === 'rejected' && p.reject_reason ? `<div class="msg err" style="margin:8px 0 0;padding:8px 10px;font-size:12.5px"><b>Motif :</b> ${esc(p.reject_reason)}</div>` : ''}</div></a>`;
   }).join('') : '<div class="mgem"><p>Aucun enregistrement pour le moment. Commencez par « Enregistrer un client / un lieu ».</p></div>';
+  box.querySelectorAll('[data-bl]').forEach(b => b.onclick = e => { e.preventDefault(); e.stopPropagation(); billingSheet(data.find(x => x.id === b.dataset.bl), { collect: true, create: true, sponsor: false, cancel: false }, () => agent()); });
   box.querySelectorAll('[data-rp]').forEach(b => b.onclick = async e => {
     e.preventDefault(); e.stopPropagation();
     if (!confirm('Générer un nouveau mot de passe provisoire pour le client de cette fiche ?')) return;

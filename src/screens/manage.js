@@ -1,5 +1,6 @@
 import { esc, svg, I, sb, configured, getProfile, toast, pickPhoto, uploadPhoto, fmtPrice, removeStored } from '../core.js';
 import { CAT } from '../data.js';
+import { billingSheet, invoiceRow, planBox, tarifsBox, loadTarifs, dueTotal, money } from '../billing.js';
 import { plain, topbar, bindBack, errBox, notConfigured, rowHtml, photoBox, shell } from '../ui.js';
 import { PRESET_TAGS } from './place.js';
 import { SECTAGS, MGR, MGR_DEFAULT, ico } from '../sector.js';
@@ -25,10 +26,10 @@ export async function manage(id) {
   const hasDuty = ['pharmacie', 'hopital'].includes(p.category);
   plain(`<div class="mgh safe-top"><div class="mgt"><button class="back" id="back">${svg(I.back, 20)}</button><div><small>Espace client · ${esc(ct.label.replace(/s$/, ''))}</small><h1>${esc(p.name)}</h1></div><a class="mgv" href="#/place/${id}">${svg(I.eye || '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>', 18, '#fff', 2)} Ma fiche</a></div>
     <div class="mgs" id="m_stat"><div><b>…</b><span>Vues</span></div><div><b>…</b><span>Appels</span></div><div><b>…</b><span>Messages</span></div><div><b>…</b><span>WhatsApp</span></div></div></div>
-    <div class="mgtabs" id="m_tabs"><button data-t="cat" class="on">${esc(cfg.tab)}</button><button data-t="inf">Infos</button><button data-t="pho">Photos</button><button data-t="act">Activité</button></div>
+    <div class="mgtabs" id="m_tabs"><button data-t="cat" class="on">${esc(cfg.tab)}</button><button data-t="inf">Infos</button><button data-t="pho">Photos</button><button data-t="act">Activité</button><button data-t="fac">Factures<i class="abdg" id="b_fac" style="display:none"></i></button></div>
     <div class="mgbody" id="m_body"></div><div class="mgsav" id="m_sav" style="display:none"><button class="btn" id="m_save">Enregistrer les informations</button></div>`);
   bindBack();
-  const showTab = t => { tab = t; document.querySelectorAll('#m_tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t)); $('m_sav').style.display = t === 'inf' ? 'block' : 'none'; ({ cat: drawCat, inf: drawInf, pho: drawPho, act: drawAct })[t](); $('m_body').scrollTop = 0; };
+  const showTab = t => { tab = t; document.querySelectorAll('#m_tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t)); $('m_sav').style.display = t === 'inf' ? 'block' : 'none'; ({ cat: drawCat, inf: drawInf, pho: drawPho, act: drawAct, fac: drawFac })[t](); $('m_body').scrollTop = 0; };
   document.querySelectorAll('#m_tabs button').forEach(b => b.onclick = () => showTab(b.dataset.t));
 
   /* ---------- catalogue ---------- */
@@ -106,6 +107,25 @@ export async function manage(id) {
     $('m_gadd').onclick = async () => { try { const ph = await pickPhoto(); if (!ph) return; $('m_gadd').disabled = true; const url = await uploadPhoto(prof.uid, ph); const n = [...gal, url]; const { error } = await sb.rpc('owner_set_photos', { p_id: id, p_photos: n }); if (error) throw error; gal = n; drawGal(); toast('Photo ajoutée'); } catch (e) { if (!/cancel/i.test(e?.message || '')) toast('Erreur : ' + (e.message || 'photo impossible')); } $('m_gadd').disabled = false; };
   }
 
+  /* ---------- factures ---------- */
+  let invs = [], tarifs = null; const isAdm = prof.role === 'admin';
+  const perms = { collect: isAdm, create: isAdm, sponsor: isAdm, cancel: isAdm };
+  async function drawFac() {
+    $('m_body').innerHTML = '<div class="empty">Chargement…</div>';
+    const [{ data, error }, t] = await Promise.all([sb.from('invoices').select('*').eq('place_id', id).order('created_at', { ascending: false }), tarifs ? Promise.resolve(tarifs) : loadTarifs()]);
+    tarifs = t; if (error) { $('m_body').innerHTML = errBox(error); return; } invs = data || [];
+    const due = dueTotal(invs), b = $('b_fac'); if (b) { const n = invs.filter(i => i.status === 'due').length; b.textContent = n || ''; b.style.display = n ? 'inline-flex' : 'none'; }
+    $('m_body').innerHTML = `<div class="card2" style="background:${due ? '#FFF4EC' : '#EAF8EF'}"><div class="sub" style="margin:0">Reste à payer</div><b style="font-size:28px;color:${due ? '#E2541F' : '#1E7A43'}">${money(due)}</b>
+        <div class="sub" style="margin:4px 0 0">${due ? 'Remettez ce montant à votre agent Bangui Guide : votre reçu apparaîtra ici.' : 'Tout est à jour. Merci !'}</div></div>
+      ${planBox(p)}
+      <div class="mgct"><h2>Mes factures</h2><span>${invs.length}</span></div>
+      ${invs.length ? invs.map(i => invoiceRow(i, i.status === 'paid' ? ' · reçu ' + i.receipt : '')).join('') : '<div class="mgem"><p>Aucune facture pour le moment. Votre facture d’inscription apparaît ici dès la validation de votre fiche.</p></div>'}
+      ${isAdm ? `<button class="btn mgadd" id="f_new" style="position:static;margin:4px 0 12px">${svg(I.plus, 20, '#fff', 2.4)} Nouvelle facture</button>` : ''}${tarifsBox(tarifs)}`;
+    $('m_body').querySelectorAll('[data-iv]').forEach(x => x.onclick = () => billingSheet(p, perms, () => drawFac(), x.dataset.iv));
+    const fn = $('f_new'); if (fn) fn.onclick = () => billingSheet(p, perms, () => drawFac());
+  }
+  sb.from('invoices').select('id').eq('place_id', id).eq('status', 'due').then(({ data }) => { const b = $('b_fac'); if (b && data?.length) { b.textContent = data.length; b.style.display = 'inline-flex'; } });
+
   /* ---------- activité ---------- */
   let stats = null;
   function drawAct() {
@@ -120,5 +140,5 @@ export async function manage(id) {
     const e = $('m_stat'); if (e) e.innerHTML = [['view', 'Vues'], ['call', 'Appels'], ['message', 'Messages'], ['whatsapp', 'WhatsApp']].map(([k, l]) => `<div><b>${g(k)}</b><span>${l} · 7 j</span></div>`).join('');
     if (tab === 'act') drawAct();
   });
-  showTab('cat');
+  showTab(new URLSearchParams((location.hash.split('?')[1]) || '').get('t') === 'fac' ? 'fac' : 'cat');
 }

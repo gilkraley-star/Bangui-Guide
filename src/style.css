@@ -627,3 +627,4 @@ img{content-visibility:auto}
 .fiche .dtop .dph{min-height:84px}
 @media (max-height:820px){.fiche .tabs{padding:2px}.fiche .tabs button{padding:4px 2px 3px}.fiche .acts{margin:6px 0}.fiche .acts .btn{padding:8px 4px}.fiche .sheet2{padding-top:18px}.fiche .stline{margin-top:4px}}
 .nov>.mapw{flex:1 1 0;min-height:0}
+.mgtabs button{font-size:12.5px}.mgtabs{gap:3px}

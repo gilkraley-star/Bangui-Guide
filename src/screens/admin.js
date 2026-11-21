@@ -3,8 +3,9 @@ import { CAT } from '../data.js';
 import { plain, topbar, bindBack, errBox, notConfigured, rowHtml, photoBox } from '../ui.js';
 import { cardPhoto } from './explore.js';
 import { adHtml, adLive } from '../ads.js';
+import { billingSheet, invoiceRow, stChip, money, loadTarifs, TARIFS_DEF } from '../billing.js';
 
-const TABS = [['ov', 'Aperçu'], ['val', 'Valider'], ['ag', 'Agents'], ['pub', 'Pub'], ['pl', 'Lieux']];
+const TABS = [['ov', 'Aperçu'], ['val', 'Valider'], ['ag', 'Agents'], ['pub', 'Pub'], ['fac', 'Factures'], ['pl', 'Lieux']];
 export async function admin() {
   if (!configured) { plain(topbar('Administration') + notConfigured()); bindBack(); return; }
   const prof = await getProfile().catch(() => null); if (!prof || prof.role !== 'admin') { location.hash = '#/profil'; return; }
@@ -13,7 +14,7 @@ export async function admin() {
     <div class="mgtabs" id="a_tabs">${TABS.map(([k, l]) => `<button data-t="${k}">${l}<i class="abdg" id="b_${k}"></i></button>`).join('')}</div><div class="mgbody" id="a_body"></div>`);
   bindBack(); const $ = i => document.getElementById(i);
   const badge = (k, n) => { const b = $('b_' + k); if (b) { b.textContent = n || ''; b.style.display = n ? 'inline-flex' : 'none'; } };
-  const show = t => { tab = t; sessionStorage.setItem('bg_admtab', t); document.querySelectorAll('#a_tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t)); ({ ov: drawOv, val: drawVal, ag: drawAg, pub: drawPub, pl: drawPl })[t](); };
+  const show = t => { tab = t; sessionStorage.setItem('bg_admtab', t); document.querySelectorAll('#a_tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t)); ({ ov: drawOv, val: drawVal, ag: drawAg, pub: drawPub, fac: drawFac, pl: drawPl })[t](); };
   document.querySelectorAll('#a_tabs button').forEach(b => b.onclick = () => show(b.dataset.t));
   const rpc = async (n, a) => { const { data, error } = await sb.rpc(n, a); if (error) throw error; return data; };
 
@@ -22,8 +23,8 @@ export async function admin() {
     $('a_body').innerHTML = '<div class="empty">Chargement…</div>';
     try { ov = await rpc('admin_overview'); } catch (e) { $('a_body').innerHTML = errBox(e) + '<div class="sub" style="padding:8px">Si l’erreur parle d’une fonction manquante, exécutez migration_v5.sql dans Supabase.</div>'; return; }
     badge('val', ov.pending);
-    const T = [['published', 'Lieux publiés', '#1FA64D'], ['pending', 'À valider', '#E2541F'], ['agents', 'Agents', '#1E6BE0'], ['owners', 'Clients actifs', '#9B2FC9'], ['claims', 'Demandes clients', '#E2541F'], ['sponsored', 'Sponsorisés', '#F5841F'], ['users', 'Comptes', '#142A52'], ['ads', 'Pubs en ligne', '#F5841F'], ['revenue', 'Pubs encaissées (FCFA)', '#1FA64D']];
-    $('a_body').innerHTML = `<div class="mgst">${T.map(([k, l, c]) => `<div style="border-left:4px solid ${c}"><b>${k === 'revenue' ? String(ov[k] ?? 0).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f') : (ov[k] ?? 0)}</b><span>${l}</span></div>`).join('')}</div>
+    const T = [['published', 'Lieux publiés', '#1FA64D'], ['pending', 'À valider', '#E2541F'], ['agents', 'Agents', '#1E6BE0'], ['owners', 'Clients actifs', '#9B2FC9'], ['claims', 'Demandes clients', '#E2541F'], ['sponsored', 'Sponsorisés', '#F5841F'], ['users', 'Comptes', '#142A52'], ['ads', 'Pubs en ligne', '#F5841F'], ['inv_due', 'À encaisser (FCFA)', '#E2541F'], ['inv_paid', 'Encaissé (FCFA)', '#1FA64D'], ['revenue', 'Pubs payées (FCFA)', '#1FA64D']];
+    $('a_body').innerHTML = `<div class="mgst">${T.map(([k, l, c]) => `<div style="border-left:4px solid ${c}"><b>${/revenue|inv_/.test(k) ? String(ov[k] ?? 0).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f') : (ov[k] ?? 0)}</b><span>${l}</span></div>`).join('')}</div>
       <a class="card2 mgln" href="#/admin/claims"><span>${svg(I.plus, 22, '#E2541F', 2)}</span><div><b>Demandes d’entreprises</b><div class="sub">${ov.claims ? ov.claims + ' en attente' : 'Aucune demande en attente'}</div></div>${svg('<path d="m9 6 6 6-6 6"/>', 18, '#8A90A3', 2)}</a>
       <a class="card2 mgln" href="#/agent/new"><span>${svg(I.pin, 22, '#1E3A8A', 2)}</span><div><b>Enregistrer un lieu</b><div class="sub">Créer vous-même une fiche (publiée directement)</div></div>${svg('<path d="m9 6 6 6-6 6"/>', 18, '#8A90A3', 2)}</a>`;
   }
@@ -32,17 +33,20 @@ export async function admin() {
   async function drawVal() {
     $('a_body').innerHTML = '<div class="empty">Chargement…</div>';
     try { pend = await rpc('admin_pending'); } catch (e) { $('a_body').innerHTML = errBox(e); return; }
-    badge('val', pend.length);
+    const TAR = await loadTarifs(); badge('val', pend.length);
     $('a_body').innerHTML = pend.length ? pend.map(p => `<div class="card2 avl" data-p="${p.id}"><div style="display:flex;gap:12px"><span class="mth big" style="background:center/cover url('${esc(cardPhoto(p) || '')}')"></span><div class="mgin"><b>${esc(p.name)}</b><small>${esc(CAT[p.category]?.label || p.category)}${p.area ? ' · ' + esc(p.area) : ''}</small><small>Par ${esc(p.agent_name || 'agent')} · ${new Date(p.created_at).toLocaleDateString('fr-FR')}</small><small>${p.n_items} élément(s) · ${p.phone ? esc(p.phone) : 'sans téléphone'}</small></div></div>
       ${p.description ? `<div class="sub" style="margin:8px 0 0">${esc(p.description)}</div>` : ''}
-      <div class="field" style="margin:10px 0 0"><label>Sponsoring à la publication</label><select data-sp><option value="0">Aucun</option><option value="30">Sponsorisé 30 jours</option><option value="90">Sponsorisé 90 jours</option><option value="365">Sponsorisé 1 an</option></select></div><div style="display:flex;gap:8px;margin-top:10px"><a class="btn ghost" href="#/place/${p.id}" style="flex:1;padding:10px;text-align:center">Voir la fiche</a><button class="btn ok" data-a="published" style="flex:1;padding:10px">Publier</button><button class="btn no" data-a="rejected" style="flex:1;padding:10px">Refuser</button></div></div>`).join('') : '<div class="mgem"><p>Rien à valider pour le moment. Les fiches enregistrées par vos agents apparaissent ici.</p></div>';
+      <div class="sub" style="margin:10px 0 0">À la publication, la facture d’inscription (${money(TAR.inscription)}) est envoyée au client.</div><div style="display:flex;gap:8px;margin-top:8px"><div class="field" style="flex:1;margin:0"><label>Abonnement</label><select data-pl><option value="">Aucun</option><option value="mensuel">Mensuel · ${money(TAR.mensuel)}</option><option value="annuel">Annuel · ${money(TAR.annuel)}</option></select></div><div class="field" style="flex:1;margin:0"><label>Sponsoring</label><select data-sp><option value="0">Aucun</option>${[1, 2, 4, 8, 12].map(n => `<option value="${n}">${n} sem. · ${money(TAR.sponsoring * n)}</option>`).join('')}</select></div></div><div style="display:flex;gap:8px;margin-top:10px"><a class="btn ghost" href="#/place/${p.id}" style="flex:1;padding:10px;text-align:center">Voir la fiche</a><button class="btn ok" data-a="published" style="flex:1;padding:10px">Publier</button><button class="btn no" data-a="rejected" style="flex:1;padding:10px">Refuser</button></div></div>`).join('') : '<div class="mgem"><p>Rien à valider pour le moment. Les fiches enregistrées par vos agents apparaissent ici.</p></div>';
     document.querySelectorAll('.avl [data-a]').forEach(b => b.onclick = async () => {
       const id = b.closest('.avl').dataset.p, pub = b.dataset.a === 'published'; let why = null;
       if (!pub) { why = prompt('Motif du refus (visible par l’agent) :', ''); if (why === null) return; }
       b.disabled = true;
-      const days = pub ? +(b.closest('.avl').querySelector('[data-sp]')?.value || 0) : 0, upd = { status: b.dataset.a, verified: pub, reject_reason: pub ? null : (why.trim() || null) }; if (days) { upd.sponsored = true; upd.sponsored_until = new Date(Date.now() + days * 864e5).toISOString(); }
+      const upd = { status: b.dataset.a, verified: pub, reject_reason: pub ? null : (why.trim() || null) };
       const { error } = await sb.from('places').update(upd).eq('id', id);
-      if (error) { toast('Erreur : ' + error.message); b.disabled = false; return; } toast(pub ? 'Fiche publiée' : 'Fiche refusée'); drawVal();
+      if (error) { toast('Erreur : ' + error.message); b.disabled = false; return; }
+      if (pub) { const card = b.closest('.avl'), pl = card.querySelector('[data-pl]')?.value, wk = +(card.querySelector('[data-sp]')?.value || 0);
+        try { if (pl) await rpc('create_invoice', { p_place: id, p_kind: pl, p_qty: 1 }); if (wk) await rpc('create_invoice', { p_place: id, p_kind: 'sponsoring', p_qty: wk }); } catch (e) { toast('Fiche publiée, facture non créée : ' + e.message); drawVal(); return; } }
+      toast(pub ? 'Fiche publiée · facture(s) envoyée(s) au client' : 'Fiche refusée'); drawVal();
     });
   }
 
@@ -145,6 +149,30 @@ export async function admin() {
       } catch (e) { toast('Erreur : ' + (e.message || e)); b.disabled = false; b.textContent = ad ? 'Enregistrer' : 'Publier la publicité'; }
     };
     prev();
+  }
+
+  /* ----- Factures ----- */
+  let fFilter = 'due';
+  async function drawFac() {
+    $('a_body').innerHTML = '<div class="empty">Chargement…</div>';
+    let sm; try { sm = await rpc('admin_billing_summary'); } catch (e) { $('a_body').innerHTML = errBox(e); return; }
+    const T = await loadTarifs();
+    const { data, error } = await sb.from('invoices').select('*, places(id,name,plan,plan_until,sponsored,sponsored_until)').order('created_at', { ascending: false }).limit(150);
+    if (error) { $('a_body').innerHTML = errBox(error); return; }
+    const list = (data || []).filter(i => fFilter === 'all' || i.status === fFilter);
+    $('a_body').innerHTML = `<div class="mgst"><div style="border-left:4px solid #E2541F"><b>${money(sm.due)}</b><span>À encaisser · ${sm.due_n} facture(s)</span></div><div style="border-left:4px solid #1FA64D"><b>${money(sm.paid_month)}</b><span>Encaissé ce mois</span></div>
+        <div style="border-left:4px solid #142A52"><b>${money(sm.paid)}</b><span>Encaissé au total</span></div><div style="border-left:4px solid #F5841F"><b>${sm.expiring}</b><span>Abonnements à renouveler (7 j)</span></div></div>
+      ${(sm.by_collector || []).length ? `<div class="card2" style="margin-top:10px"><div class="sh">Encaissements par personne</div>${(sm.by_collector || []).map(c => `<div class="mgrow" style="padding:6px 0;border-bottom:1px solid #EDF0F8"><span>${esc(c.name)} <small style="color:#8A90A3">(${c.n})</small></span><b style="color:#142A52">${money(c.total)}</b></div>`).join('')}<div class="sub" style="margin-top:6px">Somme à récupérer auprès de chaque agent qui a encaissé en espèces.</div></div>` : ''}
+      <div class="fchips xch" id="f_ch" style="margin:10px 0">${[['due', 'À payer'], ['paid', 'Payées'], ['all', 'Toutes']].map(([k, l]) => `<button class="fc ${fFilter === k ? 'on' : ''}" data-f="${k}">${l}</button>`).join('')}</div>
+      ${list.length ? list.map(i => invoiceRow(i, ' · ' + esc(i.places?.name || '') + (i.status === 'paid' && i.collector_name ? ' · par ' + esc(i.collector_name) : ''))).join('') : '<div class="mgem"><p>Aucune facture dans cette liste.</p></div>'}
+      <div class="card2" style="margin-top:10px"><div class="sh">Tarifs (FCFA)</div><div id="t_e"></div>${[['inscription', 'Inscription'], ['mensuel', 'Abonnement mensuel'], ['annuel', 'Abonnement annuel'], ['sponsoring', 'Sponsoring par semaine']].map(([k, l]) => `<div class="field"><label>${l}</label><input type="number" inputmode="numeric" min="0" data-t="${k}" value="${T[k]}"></div>`).join('')}
+        <button class="btn ghost" id="t_ok">Enregistrer les tarifs</button><div class="sub" style="margin-top:6px">Les nouveaux tarifs s’appliquent aux prochaines factures ; les factures déjà émises ne changent pas.</div></div>`;
+    document.querySelectorAll('#f_ch [data-f]').forEach(b => b.onclick = () => { fFilter = b.dataset.f; drawFac(); });
+    document.querySelectorAll('[data-iv]').forEach(b => b.onclick = () => { const iv = data.find(x => x.id === b.dataset.iv); billingSheet({ ...(iv.places || {}), id: iv.place_id }, { collect: true, create: true, sponsor: true, cancel: true }, () => drawFac(), iv.id); });
+    $('t_ok').onclick = async () => {
+      const rows = [...document.querySelectorAll('[data-t]')].map(i => ({ code: i.dataset.t, amount: Math.max(0, Math.round(+i.value || 0)), label: ({ inscription: 'Inscription', mensuel: 'Abonnement mensuel', annuel: 'Abonnement annuel', sponsoring: 'Sponsoring (par semaine)' })[i.dataset.t] }));
+      const { error } = await sb.from('tarifs').upsert(rows); if (error) { $('t_e').innerHTML = `<div class="msg err">${esc(error.message)}</div>`; return; } toast('Tarifs enregistrés');
+    };
   }
 
   /* ----- Lieux ----- */
