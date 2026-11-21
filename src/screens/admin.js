@@ -35,12 +35,13 @@ export async function admin() {
     badge('val', pend.length);
     $('a_body').innerHTML = pend.length ? pend.map(p => `<div class="card2 avl" data-p="${p.id}"><div style="display:flex;gap:12px"><span class="mth big" style="background:center/cover url('${esc(cardPhoto(p) || '')}')"></span><div class="mgin"><b>${esc(p.name)}</b><small>${esc(CAT[p.category]?.label || p.category)}${p.area ? ' · ' + esc(p.area) : ''}</small><small>Par ${esc(p.agent_name || 'agent')} · ${new Date(p.created_at).toLocaleDateString('fr-FR')}</small><small>${p.n_items} élément(s) · ${p.phone ? esc(p.phone) : 'sans téléphone'}</small></div></div>
       ${p.description ? `<div class="sub" style="margin:8px 0 0">${esc(p.description)}</div>` : ''}
-      <div style="display:flex;gap:8px;margin-top:10px"><a class="btn ghost" href="#/place/${p.id}" style="flex:1;padding:10px;text-align:center">Voir la fiche</a><button class="btn ok" data-a="published" style="flex:1;padding:10px">Publier</button><button class="btn no" data-a="rejected" style="flex:1;padding:10px">Refuser</button></div></div>`).join('') : '<div class="mgem"><p>Rien à valider pour le moment. Les fiches enregistrées par vos agents apparaissent ici.</p></div>';
+      <div class="field" style="margin:10px 0 0"><label>Sponsoring à la publication</label><select data-sp><option value="0">Aucun</option><option value="30">Sponsorisé 30 jours</option><option value="90">Sponsorisé 90 jours</option><option value="365">Sponsorisé 1 an</option></select></div><div style="display:flex;gap:8px;margin-top:10px"><a class="btn ghost" href="#/place/${p.id}" style="flex:1;padding:10px;text-align:center">Voir la fiche</a><button class="btn ok" data-a="published" style="flex:1;padding:10px">Publier</button><button class="btn no" data-a="rejected" style="flex:1;padding:10px">Refuser</button></div></div>`).join('') : '<div class="mgem"><p>Rien à valider pour le moment. Les fiches enregistrées par vos agents apparaissent ici.</p></div>';
     document.querySelectorAll('.avl [data-a]').forEach(b => b.onclick = async () => {
       const id = b.closest('.avl').dataset.p, pub = b.dataset.a === 'published'; let why = null;
       if (!pub) { why = prompt('Motif du refus (visible par l’agent) :', ''); if (why === null) return; }
       b.disabled = true;
-      const { error } = await sb.from('places').update({ status: b.dataset.a, verified: pub, reject_reason: pub ? null : (why.trim() || null) }).eq('id', id);
+      const days = pub ? +(b.closest('.avl').querySelector('[data-sp]')?.value || 0) : 0, upd = { status: b.dataset.a, verified: pub, reject_reason: pub ? null : (why.trim() || null) }; if (days) { upd.sponsored = true; upd.sponsored_until = new Date(Date.now() + days * 864e5).toISOString(); }
+      const { error } = await sb.from('places').update(upd).eq('id', id);
       if (error) { toast('Erreur : ' + error.message); b.disabled = false; return; } toast(pub ? 'Fiche publiée' : 'Fiche refusée'); drawVal();
     });
   }
@@ -56,8 +57,17 @@ export async function admin() {
         <div class="field"><label>Nom complet</label><input id="ag_n" maxlength="80"></div>
         <div class="field"><label>Email de connexion</label><input id="ag_m" type="email" autocapitalize="none"></div>
         <div class="field"><label>Mot de passe provisoire (8 caractères min.)</label><input id="ag_p" type="text" autocapitalize="none" value="${Math.random().toString(36).slice(2, 6)}${Math.random().toString(36).slice(2, 6)}"></div>
-        <button class="btn" id="ag_ok">Créer l’agent</button><div class="sub" style="margin-top:8px">Communiquez-lui l’email et ce mot de passe. Il pourra se connecter dans « Profil ». Aucun email de confirmation n’est nécessaire. Si la personne a déjà un compte, saisissez son email : elle deviendra agent.</div></div>`;
+        <button class="btn" id="ag_ok">Créer l’agent</button><div class="sub" style="margin-top:8px">Communiquez-lui l’email et ce mot de passe : il devra en choisir un nouveau à sa première connexion. Il pourra se connecter dans « Profil ». Aucun email de confirmation n’est nécessaire. Si la personne a déjà un compte, saisissez son email : elle deviendra agent.</div></div>
+      <div class="card2"><div class="sh">Réinitialiser un mot de passe</div><div id="rp_e"></div>
+        <div class="field"><label>Email du compte (agent, client…)</label><input id="rp_m" type="email" autocapitalize="none"></div>
+        <div class="field"><label>Nouveau mot de passe provisoire</label><input id="rp_p" type="text" autocapitalize="none" value="${Math.random().toString(36).slice(2, 6)}${Math.random().toString(36).slice(2, 6)}"></div>
+        <button class="btn ghost" id="rp_ok">Réinitialiser</button><div class="sub" style="margin-top:8px">La personne devra choisir un nouveau mot de passe à sa prochaine connexion.</div></div>`;
     document.querySelectorAll('[data-rm]').forEach(b => b.onclick = async () => { if (!confirm('Retirer le rôle d’agent ?')) return; try { toast(await rpc('admin_set_role', { p_email: b.dataset.rm, p_role: 'user' })); drawAg(); } catch (e) { toast('Erreur : ' + e.message); } });
+    $('rp_ok').onclick = async () => {
+      const em = $('rp_m').value.trim(), pw = $('rp_p').value, e = m => $('rp_e').innerHTML = `<div class="msg ${m[0]}">${esc(m[1])}</div>`;
+      if (!/^\S+@\S+\.\S+$/.test(em)) return e(['err', 'Email invalide']); if (pw.length < 6) return e(['err', 'Mot de passe : 6 caractères minimum']);
+      $('rp_ok').disabled = true; try { const r = await rpc('staff_reset_password', { p_email: em, p_password: pw }); e(r === 'OK' ? ['info', `Mot de passe de ${em} remplacé. Communiquez-lui : ${pw}`] : ['err', r]); } catch (x) { e(['err', x.message]); } $('rp_ok').disabled = false;
+    };
     $('ag_ok').onclick = async () => {
       const name = $('ag_n').value.trim(), email = $('ag_m').value.trim().toLowerCase(), pw = $('ag_p').value; const err = m => $('ag_e').innerHTML = `<div class="msg err">${esc(m)}</div>`;
       if (!/^\S+@\S+\.\S+$/.test(email)) return err('Email invalide'); if (pw.length < 8) return err('Mot de passe : 8 caractères minimum');

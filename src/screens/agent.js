@@ -79,8 +79,17 @@ export async function agent() {
     const s = STAT[p.status] || STAT.pending, edit = p.status !== 'published';
     return `<a class="card2" href="${p.status === 'published' ? '#/place/' + p.id : '#/agent/edit/' + p.id}" style="display:flex;gap:12px;text-decoration:none;color:inherit;align-items:flex-start">${photoBox(p, 'th2', 24)}<div class="mgin"><b>${esc(p.name)}</b><small>${esc(CAT[p.category]?.label || p.category)}${p.area ? ' · ' + esc(p.area) : ''}</small>
       <div style="margin-top:5px"><span class="pill" style="background:${s[1]};color:${s[2]}">${s[0]}</span>${edit ? '<span class="sub" style="margin-left:8px">Toucher pour modifier</span>' : ''}</div>
+      ${p.owner_id ? `<button type="button" class="btn ghost" data-rp="${p.id}" style="margin-top:8px;padding:8px 10px;font-size:12.5px">Mot de passe oublié par le client ?</button>` : ''}
       ${p.status === 'rejected' && p.reject_reason ? `<div class="msg err" style="margin:8px 0 0;padding:8px 10px;font-size:12.5px"><b>Motif :</b> ${esc(p.reject_reason)}</div>` : ''}</div></a>`;
   }).join('') : '<div class="mgem"><p>Aucun enregistrement pour le moment. Commencez par « Enregistrer un client / un lieu ».</p></div>';
+  box.querySelectorAll('[data-rp]').forEach(b => b.onclick = async e => {
+    e.preventDefault(); e.stopPropagation();
+    if (!confirm('Générer un nouveau mot de passe provisoire pour le client de cette fiche ?')) return;
+    const pw = Math.random().toString(36).slice(2, 6) + Math.random().toString(36).slice(2, 6), pl = data.find(x => x.id === b.dataset.rp);
+    const { data: em, error } = await sb.rpc('agent_reset_owner_password', { p_place: b.dataset.rp, p_password: pw });
+    if (error) { toast('Erreur : ' + error.message); return; }
+    document.getElementById('anote').innerHTML = `<div class="msg info"><b>Nouveau mot de passe</b> pour « ${esc(pl?.name || '')} ».<br>Email : <b>${esc(em)}</b><br>Mot de passe provisoire : <b>${esc(pw)}</b><br><small>Le client devra en choisir un nouveau à sa prochaine connexion.</small></div>`; scrollTo(0, 0);
+  });
 }
 
 /* ---------- formulaire : nouvelle fiche ou modification ---------- */
@@ -149,13 +158,16 @@ export async function newPlace(editId) {
   S.cat = $('n_cat').value; drawGal(); drawTags(); drawCat();
   $('n_gps').onclick = async () => { $('n_gt').textContent = 'Localisation…'; try { const g = await getGps(); S.lat = g.lat; S.lng = g.lng; $('n_gt').textContent = `✓ ${g.lat.toFixed(5)}, ${g.lng.toFixed(5)} (±${Math.round(g.acc)} m)`; } catch (e) { $('n_gt').textContent = 'Position indisponible : autorisez la localisation.'; } };
 
-  let created = cur ? cur.id : null;
+  let created = cur ? cur.id : null; const item0name = () => $('n_name').value.trim().replace(/[%_,()]/g, ' ');
   $('nf').onsubmit = async e => {
     e.preventDefault(); const b = $('n_go'), lbl = b.textContent; b.disabled = true; b.textContent = 'Envoi…';
     const c = cfgOf(S.cat), unitFor = r => c.unit === 'free' ? (r.unit || null) : c.unit === 'none' ? null : (r.price === '' || r.price == null ? null : c.unit);
     const mail = $('c_mail')?.value.trim().toLowerCase() || '', pw = $('c_pw')?.value || '';
     if (mail && !/^\S+@\S+\.\S+$/.test(mail)) { $('ne').innerHTML = '<div class="msg err">Email du client invalide.</div>'; b.disabled = false; b.textContent = lbl; scrollTo(0, 0); $('scroll')?.scrollTo(0, 0); return; }
     if (mail && pw.length < 6 && navigator.onLine) { $('ne').innerHTML = '<div class="msg err">Mot de passe du client : 6 caractères minimum.</div>'; b.disabled = false; b.textContent = lbl; return; }
+    if (!editId && !created) {
+      try { const { data: dup } = await sb.from('places').select('name,area').ilike('name', item0name()).limit(3); if (dup?.length && !confirm(`Un lieu « ${dup[0].name} » existe déjà${dup[0].area ? ' (' + dup[0].area + ')' : ''}. L’enregistrer quand même ?`)) { b.disabled = false; b.textContent = lbl; return; } } catch { }
+    }
     const item = { editId: created, name: $('n_name').value.trim(), category: $('n_cat').value, area: $('n_area').value || null, address: $('n_addr').value.trim() || null, phone: $('n_tel').value.trim() || null, hours: $('n_hours').value.trim() || null, description: $('n_desc').value.trim() || null, lat: S.lat, lng: S.lng, photos: S.photos, tags: [...S.tags], items: rows.map(r => ({ ...r, unit: unitFor(r) })), clientEmail: mail || null, clientPw: mail ? pw : null, clientName: $('c_name')?.value.trim() || '' };
     try {
       const warn = await sendPlace(item, prof); created = item.editId;
