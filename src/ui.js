@@ -79,3 +79,14 @@ export const heroSvg = () => `<svg class="herosvg" viewBox="0 0 390 250" preserv
 <g transform="translate(300 8) rotate(14)"><path d="M0 0 Q30 -10 60 0 T120 0 L120 12 Q90 22 60 12 T0 12Z" fill="#1F4FBF"/><path d="M0 12 Q30 2 60 12 T120 12 L120 24 Q90 34 60 24 T0 24Z" fill="#fff"/>
 <path d="M0 24 Q30 14 60 24 T120 24 L120 36 Q90 46 60 36 T0 36Z" fill="#2E9E5B"/><path d="M0 36 Q30 26 60 36 T120 36 L120 48 Q90 58 60 48 T0 48Z" fill="#FFD23F"/><path d="M52 0 Q60 -4 68 2 L68 52 Q60 56 52 50Z" fill="#D8262F" opacity=".95"/></g>
 <rect y="130" width="390" height="120" fill="url(#sh)"/></svg>`;
+
+/* Ajuste la fiche à la taille réelle du téléphone (hauteur, police système agrandie) :
+   réduit un peu le contenu tant que la photo du haut reste trop petite. */
+export function fitFiche() {
+  const run = () => {
+    const sc = document.querySelector('.scroll.fiche'), top = sc?.querySelector('.dtop'), s2 = sc?.querySelector('.sheet2'); if (!sc || !top || !s2) return;
+    const target = Math.max(190, Math.min(250, innerHeight * .27)); let z = 1; s2.style.zoom = 1;
+    while (top.getBoundingClientRect().height < target && z > .82) { z = Math.round((z - .02) * 100) / 100; s2.style.zoom = z; }
+  };
+  run(); requestAnimationFrame(run); setTimeout(run, 350); setTimeout(run, 1200);
+}

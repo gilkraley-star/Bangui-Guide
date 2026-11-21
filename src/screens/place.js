@@ -1,7 +1,7 @@
 import { esc, svg, I, CI, PIN, catPath, sb, configured, getProfile, requireLogin, favs, toast, fmtPrice, withDist, attachStats, swr, isSponsored, fmtD, logEvent, waLink, openNow } from '../core.js';
 import { CAT } from '../data.js';
 import { sectorBody, statusRow, heroCarousel, CTAS, ctaIcon, TABNAME, ABOUT } from '../sector.js';
-import { $app, onLeave, photoBox, itemPhoto, heroOf, spBadge, stars, errBox, notConfigured, brand, plain, topbar, bindBack, rowHtml } from '../ui.js';
+import { $app, onLeave, photoBox, itemPhoto, heroOf, spBadge, stars, errBox, notConfigured, brand, plain, topbar, bindBack, rowHtml, fitFiche } from '../ui.js';
 
 const BADGE = /24|garde|urgence|inscription|disponible|ouvert/i;
 const TAG_ICON = {
@@ -134,4 +134,5 @@ export async function place(id, pre) {
   const ow = document.getElementById('owb'); if (ow) ow.onclick = async () => { const { data, error } = await sb.rpc('set_place_owner', { p_id: id, p_email: document.getElementById('own').value.trim() }); toast(error ? 'Erreur : ' + error.message : data); };
   };
   bindAdmin();
+  fitFiche();
 }

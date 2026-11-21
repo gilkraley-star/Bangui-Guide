@@ -621,3 +621,8 @@ img{content-visibility:auto}
 .adup{border:0;background:#EEF1F8;color:#142A52;border-radius:8px;width:28px;height:24px;font-size:11px;font-weight:800}.adup:disabled{opacity:.3}
 #n_rows input{font:inherit;font-size:14px;color:#142A52;background:#fff;border:1px solid #E3E8F4;border-radius:12px;padding:11px 12px;outline:none}
 #n_rows input:focus{border-color:#1E5BD8}
+
+/* fiche : la photo garde une vraie hauteur, même avec une grande police système ; la zone de contenu défile au besoin */
+.fiche .dtop{min-height:clamp(168px,23vh,200px)!important}
+.fiche .dtop .dph{min-height:84px}
+@media (max-height:820px){.fiche .tabs{padding:2px}.fiche .tabs button{padding:4px 2px 3px}.fiche .acts{margin:6px 0}.fiche .acts .btn{padding:8px 4px}.fiche .sheet2{padding-top:18px}.fiche .stline{margin-top:4px}}
