@@ -187,3 +187,21 @@ export const SECTAGS = {
   voyage: ['Assistance visa', 'Paiement mobile']
 };
 export const PH = { hotel: ['Chambre Standard', 'nuit'], restaurant: ['Poulet braisé', ''], pharmacie: ['Médicaments', ''], commerce: ['Smartphones', ''], hopital: ['Maternité', ''], universite: ['Licence Informatique', 'an'], ecole: ['Primaire', 'an'], banque: ['Cartes bancaires', ''], admin: ['Actes de naissance', ''], transport: ['Berline (4 places)', 'course'], btp: ['Conception de plans', ''], station: ['Essence', 'litre'], voyage: ['Bangui – Douala', ''], garage: ['Vidange', ''], salon: ['Coupe homme', ''] };
+
+/* Espace client : ce que chaque type d'activité peut gérer */
+export const MGR = {
+  restaurant: { tab: 'Menu', title: 'Mon menu', add: 'Ajouter un plat', empty: 'Ajoutez vos plats avec une belle photo et le prix.', ph: 'Poulet braisé', desc: 'Description (ingrédients, accompagnement)', price: 'req', plabel: 'Prix (FCFA)', unit: 'none' },
+  hotel: { tab: 'Chambres', title: 'Mes chambres', add: 'Ajouter une chambre', empty: 'Ajoutez vos chambres avec photo et prix par nuit.', ph: 'Chambre Deluxe', desc: 'Équipements, nombre de personnes…', price: 'req', plabel: 'Prix par nuit (FCFA)', unit: 'nuit' },
+  pharmacie: { tab: 'Services', title: 'Mes services', add: 'Ajouter un service ou produit', empty: 'Listez vos services : médicaments, parapharmacie, mère & enfant…', ph: 'Parapharmacie', desc: 'Précisions (facultatif)', price: 'none', unit: 'none' },
+  commerce: { tab: 'Produits', title: 'Mes produits', add: 'Ajouter un produit', empty: 'Ajoutez vos produits ou catégories avec photo et prix.', ph: 'Smartphones', desc: 'Description (marque, état…)', price: 'opt', plabel: 'Prix (FCFA)', unit: 'free', uph: 'pièce, kg…' },
+  hopital: { tab: 'Services', title: 'Mes services médicaux', add: 'Ajouter un service', empty: 'Ajoutez vos services : urgences, maternité, laboratoire…', ph: 'Maternité', desc: 'Précisions (ex : Suivi de grossesse, accouchement)', price: 'none', unit: 'none' },
+  universite: { tab: 'Formations', title: 'Mes formations', add: 'Ajouter une formation', empty: 'Ajoutez vos filières avec niveau et frais de scolarité.', ph: 'Licence Informatique', desc: 'Niveau (ex : Bac +3)', price: 'opt', plabel: 'Frais de scolarité (FCFA)', unit: 'an' },
+  ecole: { tab: 'Formations', title: 'Mes cycles', add: 'Ajouter un cycle', empty: 'Ajoutez vos niveaux avec les frais de scolarité.', ph: 'Primaire', desc: 'Précisions (facultatif)', price: 'opt', plabel: 'Frais de scolarité (FCFA)', unit: 'an' },
+  banque: { tab: 'Services', title: 'Mes services', add: 'Ajouter un service', empty: 'Ajoutez vos services : comptes, cartes, transferts, crédits…', ph: 'Cartes bancaires', desc: 'Précisions (facultatif)', price: 'none', unit: 'none' },
+  admin: { tab: 'Démarches', title: 'Mes démarches', add: 'Ajouter une démarche', empty: 'Listez les démarches que vous traitez.', ph: 'Actes de naissance', desc: 'Pièces à fournir, délai…', price: 'none', unit: 'none' },
+  transport: { tab: 'Véhicules', title: 'Mes véhicules et tarifs', add: 'Ajouter un véhicule', empty: 'Ajoutez vos véhicules avec photo et tarif.', ph: 'Toyota Corolla', desc: 'Type (ex : Berline, 4 places)', price: 'req', plabel: 'Tarif (FCFA)', unit: 'free', uph: 'course, jour' },
+  btp: { tab: 'Services', title: 'Mes services', add: 'Ajouter un service', empty: 'Ajoutez vos prestations avec photos de réalisations.', ph: 'Conception de plans', desc: 'Description courte', price: 'none', unit: 'none' },
+  station: { tab: 'Carburants', title: 'Carburants et services', add: 'Ajouter un carburant ou service', empty: 'Ajoutez vos carburants avec le prix, et vos autres services.', ph: 'Essence', desc: 'Précisions (facultatif)', price: 'opt', plabel: 'Prix (FCFA)', unit: 'free', uph: 'litre' },
+  voyage: { tab: 'Services', title: 'Services et tarifs', add: 'Ajouter un service ou tarif', empty: 'Ajoutez vos services et exemples de tarifs (ex : Bangui – Douala).', ph: 'Bangui – Douala', desc: 'Précisions (ex : vol direct)', price: 'opt', plabel: 'Tarif à partir de (FCFA)', unit: 'none' }
+};
+export const MGR_DEFAULT = { tab: 'Services', title: 'Mes services', add: 'Ajouter un service', empty: 'Ajoutez vos services et prestations.', ph: 'Mon service', desc: 'Description', price: 'opt', plabel: 'Prix (FCFA)', unit: 'free', uph: 'unité' };

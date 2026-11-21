@@ -10,6 +10,7 @@ import { mapScreen } from './screens/map.js';
 import { place } from './screens/place.js';
 import { messages, chat } from './screens/messages.js';
 import { claim, adminClaims } from './screens/claims.js';
+import { admin } from './screens/admin.js';
 import { profil } from './screens/profile.js';
 import { agent, newPlace, syncQueue } from './screens/agent.js';
 import { manageList, manage } from './screens/manage.js';
@@ -31,7 +32,8 @@ function route() {
   else if (path === '/agent') agent();
   else if (path === '/claim') claim();
   else if ((m = path.match(/^\/claim\/([\w-]+)$/))) claim(m[1]);
-  else if (path === '/admin') adminClaims();
+  else if (path === '/admin') admin();
+  else if (path === '/admin/claims') adminClaims();
   else if (path === '/agent/new') newPlace();
   else if (path === '/manage') manageList();
   else if ((m = path.match(/^\/manage\/([\w-]+)$/))) manage(m[1]);
