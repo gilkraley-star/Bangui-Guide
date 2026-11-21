@@ -1,0 +1,3 @@
+-- Comptes de test (identifiant / mot de passe : admin/demo, agent/demo, resto/demo). À SUPPRIMER avant la mise en production.
+-- (déjà exécuté ; voir l'historique du projet pour le script complet)
+-- delete from auth.users where email in ('admin@bangui.demo','agent@bangui.demo','resto@bangui.demo');

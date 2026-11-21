@@ -23,13 +23,13 @@ function authScreen() {
     shell(`<div class="hero safe-top" style="padding-bottom:36px"><div class="logo" style="width:max-content;padding:3px"><img src="logo.png" alt="" style="height:46px"></div><h1 style="font-size:23px;margin-top:12px">Bienvenue sur ${brand}</h1><div style="font-size:13px;opacity:.85;margin-top:4px">Connectez-vous pour écrire aux établissements, donner votre avis et plus encore.</div></div>
       <form class="pad" style="padding-top:20px" id="af"><div class="seg"><button type="button" class="${mode === 'in' ? 'on' : ''}" data-m="in">Connexion</button><button type="button" class="${mode === 'up' ? 'on' : ''}" data-m="up">Créer un compte</button></div><div id="ae"></div>
       ${mode === 'up' ? '<div class="field"><label>Votre nom</label><input id="an" autocomplete="name" required maxlength="60"></div>' : ''}
-      <div class="field"><label>Email</label><input id="ae1" type="email" autocomplete="username" required></div>
-      <div class="field"><label>Mot de passe</label><input id="ap" type="password" autocomplete="${mode === 'in' ? 'current-password' : 'new-password'}" required minlength="6"></div>
+      <div class="field"><label>${mode === 'in' ? 'Email ou identifiant' : 'Email'}</label><input id="ae1" type="${mode === 'in' ? 'text' : 'email'}" autocapitalize="none" autocomplete="username" required></div>
+      <div class="field"><label>Mot de passe</label><input id="ap" type="password" autocomplete="${mode === 'in' ? 'current-password' : 'new-password'}" required ${mode === 'in' ? '' : 'minlength="6"'}></div>
       <button class="btn" id="ab">${mode === 'in' ? 'Se connecter' : 'Créer mon compte'}</button></form>`, 'profil');
     document.querySelectorAll('.seg button').forEach(b => b.onclick = () => { mode = b.dataset.m; draw(); });
     document.getElementById('af').onsubmit = async e => {
       e.preventDefault(); const b = document.getElementById('ab'), err = document.getElementById('ae'); b.disabled = true; const label = b.textContent; b.textContent = '…';
-      const email = document.getElementById('ae1').value.trim(), password = document.getElementById('ap').value;
+      let email = document.getElementById('ae1').value.trim(); if (mode === 'in' && email && !email.includes('@')) email += '@bangui.demo'; const password = document.getElementById('ap').value;
       let res;
       if (mode === 'in') res = await sb.auth.signInWithPassword({ email, password });
       else res = await sb.auth.signUp({ email, password, options: { data: { full_name: document.getElementById('an').value.trim() } } });
