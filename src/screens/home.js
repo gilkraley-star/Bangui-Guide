@@ -15,7 +15,7 @@ export async function home() {
     + `<a class="gi" href="#/categories" style="background:#fff"><i style="background:none;box-shadow:none">${svg('<circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/>', 26, '#142A52', 3)}</i>Autres</a>`;
   shell(`<div class="homec"><div class="hero2"><img class="herophoto" src="hero.jpg" alt=""><span class="heroshade"></span><div class="in safe-top"><div class="hrow"><div class="logo" style="padding:3px"><img src="logo.png" alt="" style="height:44px"></div>
     <div style="flex:1;min-width:0">${brand}<div class="tag">Découvrez, trouvez, visitez Bangui</div></div>
-    <a class="icb" href="#/messages" aria-label="Messages">${svg(I.bell, 19, '#fff')}<b class="bdg" id="bdg-msg" style="display:none"></b></a><a class="icb" href="#/profil" aria-label="Profil">${svg(I.user, 19, '#fff')}</a></div>
+    <a class="icb" href="#/notifs" aria-label="Notifications">${svg(I.bell, 19, '#fff')}<b class="bdg" id="bdg-nf" style="display:none"></b></a><a class="icb" href="#/profil" aria-label="Profil">${svg(I.user, 19, '#fff')}</a></div>
     <div class="greet">Bonjour,<b>Trouvez un lieu à Bangui</b><i></i></div></div></div>
     <form class="sbar2" id="sf">${svg(I.search, 20, '#142A52')}<input id="q" type="search" placeholder="Restaurant, hôtel, pharmacie…" enterkeyhint="search"><button type="button" class="lb" id="loc" aria-label="Autour de moi">${svg(I.locate, 20, me0 ? '#1E6BE0' : '#142A52')}</button></form>
     <div class="grid">${cells}</div>

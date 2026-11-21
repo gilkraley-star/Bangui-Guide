@@ -616,3 +616,8 @@ img{content-visibility:auto}
 .seg{display:flex;background:#EEF1F8;border-radius:12px;padding:3px;margin-bottom:8px}.seg button{flex:1;border:0;background:none;border-radius:9px;padding:8px 2px;font-weight:700;font-size:12.5px;color:#4A5578}.seg button.on{background:#fff;color:#142A52;box-shadow:0 2px 6px rgba(20,42,82,.12)}
 .adrow{display:flex;gap:12px;background:#fff;border-radius:18px;padding:10px;margin-bottom:10px;box-shadow:0 6px 16px rgba(20,42,82,.07);align-items:center}.adrow .mth{width:92px;height:44px;border-radius:10px}
 .adst{font-size:11px;font-weight:800;border-radius:999px;padding:3px 9px}.adst.on{background:#E7F7EC;color:#1E7A43}.adst.off{background:#EEF1F8;color:#5C6684}.adst.soon{background:#FFF1E6;color:#E2541F}
+/* notifications + ordre des pubs */
+.nf.un{border-left:4px solid #E2541F}.nfd{width:9px;height:9px;border-radius:50%;background:#E2541F;flex:none;margin-top:6px}
+.adup{border:0;background:#EEF1F8;color:#142A52;border-radius:8px;width:28px;height:24px;font-size:11px;font-weight:800}.adup:disabled{opacity:.3}
+#n_rows input{font:inherit;font-size:14px;color:#142A52;background:#fff;border:1px solid #E3E8F4;border-radius:12px;padding:11px 12px;outline:none}
+#n_rows input:focus{border-color:#1E5BD8}

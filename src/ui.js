@@ -40,6 +40,7 @@ export async function refreshBadge() {
     const { count } = await sb.from('messages').select('id', { count: 'exact', head: true }).is('read_at', null).neq('sender_id', p.uid);
     if (count > 0) { b.textContent = count > 9 ? '9+' : count; b.style.display = 'flex'; }
   } catch { }
+  try { const p = await getProfile(), b = document.getElementById('bdg-nf'); if (!p || !b) return; const { count } = await sb.from('notifications').select('id', { count: 'exact', head: true }).eq('read', false); if (count > 0) { b.textContent = count > 9 ? '9+' : count; b.style.display = 'flex'; } } catch { }
 }
 export const plain = content => { $app.innerHTML = `<div class="scroll" id="scroll">${content}</div>`; };
 export const topbar = title => `<div class="top safe-top"><button class="back" id="back" aria-label="Retour">${svg(I.back, 20)}</button><h1 style="font-size:17px">${esc(title)}</h1></div>`;

@@ -1,4 +1,4 @@
-import { esc, svg, I, CI, sb, configured, getProfile, fmtTime, toast } from '../core.js';
+import { esc, svg, I, CI, sb, configured, getProfile, fmtTime, toast, swr } from '../core.js';
 import { $app, shell, skel, errBox, notConfigured, photoBox, onLeave, refreshBadge, photoOf, heroOf } from '../ui.js';
 import { CAT } from '../data.js';
 
@@ -12,15 +12,18 @@ export async function messages() {
   const prof = await getProfile().catch(() => null);
   if (!prof) { document.getElementById('ch').innerHTML = ''; cl.innerHTML = `<div class="card2" style="text-align:center;padding:24px"><div class="sh" style="justify-content:center">Connectez-vous</div><p class="sub" style="margin:0 0 14px">Pour écrire à un établissement et suivre vos conversations.</p><a class="btn" href="#/profil">Se connecter</a></div>`; return; }
   cl.innerHTML = skel(3);
-  const [{ data: convs, error }, { data: unread }] = await Promise.all([
-    sb.from('conversations').select('*, places(name, category, photo_url)').order('last_at', { ascending: false }).limit(100),
-    sb.from('messages').select('conversation_id').is('read_at', null).neq('sender_id', prof.uid)
-  ]);
-  if (error) { cl.innerHTML = errBox(error); return; }
-  const ids = (convs || []).map(c => c.id), lastMsg = {};
-  if (ids.length) { const { data: ms } = await sb.from('messages').select('conversation_id, body').in('conversation_id', ids).order('created_at', { ascending: false }).limit(400); (ms || []).forEach(m => { if (!(m.conversation_id in lastMsg)) lastMsg[m.conversation_id] = m.body; }); }
-  const cnt = {}; (unread || []).forEach(m => { cnt[m.conversation_id] = (cnt[m.conversation_id] || 0) + 1; });
-  const total = Object.values(cnt).reduce((a, b) => a + b, 0); let only = false, term = '';
+  let convs = [], lastMsg = {}, cnt = {}, total = 0, only = false, term = '';
+  const load = async () => {
+    const [{ data: cv, error }, { data: unread }] = await Promise.all([
+      sb.from('conversations').select('*, places(name, category, photo_url)').order('last_at', { ascending: false }).limit(100),
+      sb.from('messages').select('conversation_id').is('read_at', null).neq('sender_id', prof.uid)
+    ]);
+    if (error) throw error;
+    const ids = (cv || []).map(c => c.id), lm = {};
+  if (ids.length) { const { data: ms } = await sb.from('messages').select('conversation_id, body').in('conversation_id', ids).order('created_at', { ascending: false }).limit(400); (ms || []).forEach(m => { if (!(m.conversation_id in lm)) lm[m.conversation_id] = m.body; }); }
+    const c = {}; (unread || []).forEach(m => { c[m.conversation_id] = (c[m.conversation_id] || 0) + 1; });
+    return { convs: cv || [], lastMsg: lm, cnt: c };
+  };
   const draw = () => {
     document.getElementById('ch').innerHTML = `<button class="${only ? '' : 'on'}" data-f="all">Tous ${total ? `<b>${total}</b>` : ''}</button><button class="${only ? 'on' : ''}" data-f="unread">Non lus</button>`;
     document.querySelectorAll('#ch button').forEach(b => b.onclick = () => { only = b.dataset.f === 'unread'; draw(); });
@@ -34,7 +37,7 @@ export async function messages() {
       : `<div class="empty">${only ? 'Aucun message non lu.' : 'Aucune conversation. Ouvre la fiche d’un lieu et touche « Écrire ».'}</div>`;
   };
   document.getElementById('mq').oninput = e => { term = e.target.value.trim().toLowerCase(); draw(); };
-  draw();
+  await swr('msgs_' + prof.uid, load, (d, o) => { if (!d) { cl.innerHTML = errBox(o?.error); return; } ({ convs, lastMsg, cnt } = d); total = Object.values(cnt).reduce((x, y) => x + y, 0); draw(); });
 }
 
 export async function chat(id) {

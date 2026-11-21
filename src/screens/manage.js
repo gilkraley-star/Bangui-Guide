@@ -1,4 +1,4 @@
-import { esc, svg, I, sb, configured, getProfile, toast, pickPhoto, uploadPhoto, fmtPrice } from '../core.js';
+import { esc, svg, I, sb, configured, getProfile, toast, pickPhoto, uploadPhoto, fmtPrice, removeStored } from '../core.js';
 import { CAT } from '../data.js';
 import { plain, topbar, bindBack, errBox, notConfigured, rowHtml, photoBox, shell } from '../ui.js';
 import { PRESET_TAGS } from './place.js';
@@ -40,7 +40,7 @@ export async function manage(id) {
       : `<div class="mgem"><span class="sxi">${ico(cfg.ph, 34)}</span><p>${esc(cfg.empty)}</p></div>`}
       <button class="btn mgadd" id="m_add">${svg(I.plus, 20, '#fff', 2.4)} ${esc(cfg.add)}</button></div>`;
     $('m_add').onclick = () => openSheet(null);
-    document.querySelectorAll('#m_items [data-d]').forEach(b => b.onclick = async () => { if (!confirm('Supprimer cet élément ?')) return; const { error } = await sb.from('place_items').delete().eq('id', b.dataset.d); if (error) { toast('Erreur : ' + error.message); return; } list = list.filter(x => x.id !== b.dataset.d); drawCat(); });
+    document.querySelectorAll('#m_items [data-d]').forEach(b => b.onclick = async () => { if (!confirm('Supprimer cet élément ?')) return; const { error } = await sb.from('place_items').delete().eq('id', b.dataset.d); if (error) { toast('Erreur : ' + error.message); return; } removeStored(list.find(x => x.id === b.dataset.d)?.photo_url); list = list.filter(x => x.id !== b.dataset.d); drawCat(); });
     document.querySelectorAll('#m_items [data-a]').forEach(b => b.onclick = async () => { const it = list.find(x => x.id === b.dataset.a), v = it.available === false; const { error } = await sb.from('place_items').update({ available: v }).eq('id', it.id); if (error) { toast('Erreur : ' + error.message); return; } it.available = v; drawCat(); });
     document.querySelectorAll('#m_items [data-e]').forEach(b => b.onclick = () => openSheet(list.find(x => x.id === b.dataset.e)));
   }
@@ -65,7 +65,7 @@ export async function manage(id) {
       try {
         const row = { name, price: pr === '' ? null : Number(pr), unit: cfg.unit === 'free' ? ($('i_u')?.value.trim() || null) : (cfg.unit === 'none' ? null : (pr === '' ? null : cfg.unit)), description: $('i_d').value.trim() || null };
         if (ip) row.photo_url = await uploadPhoto(prof.uid, ip);
-        if (it) { const { data, error } = await sb.from('place_items').update(row).eq('id', it.id).select().single(); if (error) throw error; list = list.map(x => x.id === it.id ? data : x); toast('Modifié'); }
+        if (it) { const { data, error } = await sb.from('place_items').update(row).eq('id', it.id).select().single(); if (error) throw error; if (ip && it.photo_url) removeStored(it.photo_url); list = list.map(x => x.id === it.id ? data : x); toast('Modifié'); }
         else { const { data, error } = await sb.from('place_items').insert({ ...row, place_id: id }).select().single(); if (error) throw error; list = [...list, data]; toast('Ajouté'); }
         close(); drawCat();
       } catch (e) { toast('Erreur : ' + (e.message || e)); b.disabled = false; b.textContent = it ? 'Enregistrer' : 'Ajouter'; }
@@ -101,7 +101,7 @@ export async function manage(id) {
       <div class="card2"><div class="sh">Galerie (carrousel de la fiche)</div><div class="mgal" id="m_gal"></div><button type="button" class="btn ghost" id="m_gadd">${svg(I.cam, 18)} Ajouter une photo</button></div>`;
     $('m_ph').onclick = async () => { try { const ph = await pickPhoto(); if (!ph) return; $('m_ph').disabled = true; const url = await uploadPhoto(prof.uid, ph); const { error } = await sb.rpc('owner_update_place', { p_id: id, p_phone: p.phone || null, p_hours: p.hours || null, p_address: p.address || null, p_description: p.description || null, p_tags: tags, p_photo_url: url }); if (error) throw error; p.photo_url = url; toast('Photo principale mise à jour'); drawPho(); } catch (e) { if (!/cancel/i.test(e?.message || '')) toast('Erreur : ' + (e.message || 'photo impossible')); const b = $('m_ph'); if (b) b.disabled = false; } };
     const drawGal = () => { $('m_gal').innerHTML = gal.length ? gal.map((u, i) => `<div class="gph" style="background:center/cover url('${esc(u)}')"><button type="button" data-g="${i}" aria-label="Retirer">${svg(I.trash, 15, '#fff')}</button></div>`).join('') : '<div class="sub" style="grid-column:1/4">Ajoutez 3 à 6 photos pour un beau carrousel.</div>';
-      $('m_gal').querySelectorAll('[data-g]').forEach(b => b.onclick = async () => { const n = gal.filter((_, i) => i !== +b.dataset.g); const { error } = await sb.rpc('owner_set_photos', { p_id: id, p_photos: n }); if (error) { toast('Erreur : ' + error.message); return; } gal = n; drawGal(); }); };
+      $('m_gal').querySelectorAll('[data-g]').forEach(b => b.onclick = async () => { const n = gal.filter((_, i) => i !== +b.dataset.g); const { error } = await sb.rpc('owner_set_photos', { p_id: id, p_photos: n }); if (error) { toast('Erreur : ' + error.message); return; } removeStored(gal[+b.dataset.g]); gal = n; drawGal(); }); };
     drawGal();
     $('m_gadd').onclick = async () => { try { const ph = await pickPhoto(); if (!ph) return; $('m_gadd').disabled = true; const url = await uploadPhoto(prof.uid, ph); const n = [...gal, url]; const { error } = await sb.rpc('owner_set_photos', { p_id: id, p_photos: n }); if (error) throw error; gal = n; drawGal(); toast('Photo ajoutée'); } catch (e) { if (!/cancel/i.test(e?.message || '')) toast('Erreur : ' + (e.message || 'photo impossible')); } $('m_gadd').disabled = false; };
   }

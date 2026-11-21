@@ -111,6 +111,12 @@ export async function uploadPhoto(uid, dataUrl) {
   return sb.storage.from('place-photos').getPublicUrl(path).data.publicUrl;
 }
 
+/* supprime un fichier du stockage (au mieux : sans erreur bloquante) */
+export function removeStored(url) {
+  const m = /\/object\/public\/place-photos\/(.+)$/.exec(url || ''); if (!m || !configured) return;
+  sb.storage.from('place-photos').remove([decodeURIComponent(m[1])]).then(() => { }, () => { });
+}
+
 /* ----- v3 : stats, ouvert maintenant, WhatsApp, cache hors connexion ----- */
 export const logEvent = (id, kind) => { if (configured) sb.from('place_events').insert({ place_id: id, kind }).then(() => { }, () => { }); };
 export const waLink = (phone, text) => { const n = (phone || '').replace(/[^\d]/g, ''); return n ? `https://wa.me/${n}${text ? '?text=' + encodeURIComponent(text) : ''}` : ''; };

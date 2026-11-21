@@ -1,7 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
 import { esc, svg, I, sb, configured, getProfile, toast, pickPhoto, uploadPhoto } from '../core.js';
 import { CAT } from '../data.js';
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config.js';
 import { plain, topbar, bindBack, errBox, notConfigured, rowHtml, photoBox } from '../ui.js';
 import { cardPhoto } from './explore.js';
 import { adHtml, adLive } from '../ads.js';
@@ -24,8 +22,8 @@ export async function admin() {
     $('a_body').innerHTML = '<div class="empty">Chargement…</div>';
     try { ov = await rpc('admin_overview'); } catch (e) { $('a_body').innerHTML = errBox(e) + '<div class="sub" style="padding:8px">Si l’erreur parle d’une fonction manquante, exécutez migration_v5.sql dans Supabase.</div>'; return; }
     badge('val', ov.pending);
-    const T = [['published', 'Lieux publiés', '#1FA64D'], ['pending', 'À valider', '#E2541F'], ['agents', 'Agents', '#1E6BE0'], ['owners', 'Clients actifs', '#9B2FC9'], ['claims', 'Demandes clients', '#E2541F'], ['sponsored', 'Sponsorisés', '#F5841F'], ['users', 'Comptes', '#142A52'], ['rejected', 'Refusés', '#8A90A3']];
-    $('a_body').innerHTML = `<div class="mgst">${T.map(([k, l, c]) => `<div style="border-left:4px solid ${c}"><b>${ov[k] ?? 0}</b><span>${l}</span></div>`).join('')}</div>
+    const T = [['published', 'Lieux publiés', '#1FA64D'], ['pending', 'À valider', '#E2541F'], ['agents', 'Agents', '#1E6BE0'], ['owners', 'Clients actifs', '#9B2FC9'], ['claims', 'Demandes clients', '#E2541F'], ['sponsored', 'Sponsorisés', '#F5841F'], ['users', 'Comptes', '#142A52'], ['ads', 'Pubs en ligne', '#F5841F'], ['revenue', 'Pubs encaissées (FCFA)', '#1FA64D']];
+    $('a_body').innerHTML = `<div class="mgst">${T.map(([k, l, c]) => `<div style="border-left:4px solid ${c}"><b>${k === 'revenue' ? String(ov[k] ?? 0).replace(/\B(?=(\d{3})+(?!\d))/g, '\u202f') : (ov[k] ?? 0)}</b><span>${l}</span></div>`).join('')}</div>
       <a class="card2 mgln" href="#/admin/claims"><span>${svg(I.plus, 22, '#E2541F', 2)}</span><div><b>Demandes d’entreprises</b><div class="sub">${ov.claims ? ov.claims + ' en attente' : 'Aucune demande en attente'}</div></div>${svg('<path d="m9 6 6 6-6 6"/>', 18, '#8A90A3', 2)}</a>
       <a class="card2 mgln" href="#/agent/new"><span>${svg(I.pin, 22, '#1E3A8A', 2)}</span><div><b>Enregistrer un lieu</b><div class="sub">Créer vous-même une fiche (publiée directement)</div></div>${svg('<path d="m9 6 6 6-6 6"/>', 18, '#8A90A3', 2)}</a>`;
   }
@@ -39,8 +37,10 @@ export async function admin() {
       ${p.description ? `<div class="sub" style="margin:8px 0 0">${esc(p.description)}</div>` : ''}
       <div style="display:flex;gap:8px;margin-top:10px"><a class="btn ghost" href="#/place/${p.id}" style="flex:1;padding:10px;text-align:center">Voir la fiche</a><button class="btn ok" data-a="published" style="flex:1;padding:10px">Publier</button><button class="btn no" data-a="rejected" style="flex:1;padding:10px">Refuser</button></div></div>`).join('') : '<div class="mgem"><p>Rien à valider pour le moment. Les fiches enregistrées par vos agents apparaissent ici.</p></div>';
     document.querySelectorAll('.avl [data-a]').forEach(b => b.onclick = async () => {
-      b.disabled = true; const id = b.closest('.avl').dataset.p, pub = b.dataset.a === 'published';
-      const { error } = await sb.from('places').update({ status: b.dataset.a, verified: pub }).eq('id', id);
+      const id = b.closest('.avl').dataset.p, pub = b.dataset.a === 'published'; let why = null;
+      if (!pub) { why = prompt('Motif du refus (visible par l’agent) :', ''); if (why === null) return; }
+      b.disabled = true;
+      const { error } = await sb.from('places').update({ status: b.dataset.a, verified: pub, reject_reason: pub ? null : (why.trim() || null) }).eq('id', id);
       if (error) { toast('Erreur : ' + error.message); b.disabled = false; return; } toast(pub ? 'Fiche publiée' : 'Fiche refusée'); drawVal();
     });
   }
@@ -56,18 +56,15 @@ export async function admin() {
         <div class="field"><label>Nom complet</label><input id="ag_n" maxlength="80"></div>
         <div class="field"><label>Email de connexion</label><input id="ag_m" type="email" autocapitalize="none"></div>
         <div class="field"><label>Mot de passe provisoire (8 caractères min.)</label><input id="ag_p" type="text" autocapitalize="none" value="${Math.random().toString(36).slice(2, 6)}${Math.random().toString(36).slice(2, 6)}"></div>
-        <button class="btn" id="ag_ok">Créer l’agent</button><div class="sub" style="margin-top:8px">Communiquez-lui l’email et ce mot de passe. Il pourra se connecter dans « Profil ». Si la personne a déjà un compte, saisissez simplement son email : elle deviendra agent.</div></div>`;
+        <button class="btn" id="ag_ok">Créer l’agent</button><div class="sub" style="margin-top:8px">Communiquez-lui l’email et ce mot de passe. Il pourra se connecter dans « Profil ». Aucun email de confirmation n’est nécessaire. Si la personne a déjà un compte, saisissez son email : elle deviendra agent.</div></div>`;
     document.querySelectorAll('[data-rm]').forEach(b => b.onclick = async () => { if (!confirm('Retirer le rôle d’agent ?')) return; try { toast(await rpc('admin_set_role', { p_email: b.dataset.rm, p_role: 'user' })); drawAg(); } catch (e) { toast('Erreur : ' + e.message); } });
     $('ag_ok').onclick = async () => {
       const name = $('ag_n').value.trim(), email = $('ag_m').value.trim().toLowerCase(), pw = $('ag_p').value; const err = m => $('ag_e').innerHTML = `<div class="msg err">${esc(m)}</div>`;
       if (!/^\S+@\S+\.\S+$/.test(email)) return err('Email invalide'); if (pw.length < 8) return err('Mot de passe : 8 caractères minimum');
       const b = $('ag_ok'); b.disabled = true; b.textContent = 'Création…';
       try {
-        const tmp = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
-        const { error } = await tmp.auth.signUp({ email, password: pw, options: { data: { full_name: name || email.split('@')[0] } } });
-        if (error && !/already|registered/i.test(error.message)) throw error;
-        const r = await rpc('admin_set_role', { p_email: email, p_role: 'agent' });
-        if (r !== 'OK') throw new Error(r);
+        const r = await rpc('staff_create_user', { p_email: email, p_password: pw, p_name: name, p_role: 'agent' });
+        if (r?.existed) toast('Ce compte existait déjà : il est maintenant agent');
         toast('Agent créé'); drawAg();
       } catch (e) { err(e.message || 'Erreur'); b.disabled = false; b.textContent = 'Créer l’agent'; }
     };
@@ -77,18 +74,21 @@ export async function admin() {
   /* ----- Publicités (sponsoring) ----- */
   async function drawPub() {
     $('a_body').innerHTML = '<div class="empty">Chargement…</div>';
-    const { data, error } = await sb.from('ads').select('*').order('sort').order('created_at', { ascending: false });
+    const { data, error } = await sb.from('ads').select('*').order('sort').order('created_at', { ascending: false }); let stats = {}; try { stats = await rpc('admin_ad_stats'); } catch { }
     if (error) { $('a_body').innerHTML = errBox(error) + '<div class="sub" style="padding:8px">Exécutez migration_v6.sql dans Supabase.</div>'; return; }
     const st = a => !a.active ? ['off', 'Désactivée'] : adLive(a) ? ['on', 'En ligne'] : (a.starts_on && a.starts_on > new Date().toISOString().slice(0, 10)) ? ['soon', 'Programmée'] : ['off', 'Terminée'];
     $('a_body').innerHTML = `<div class="mgct"><h2>Publicités</h2><span>${data.length}</span></div>
       <div class="sub" style="margin:0 2px 10px">Affichées en bannière sur l’accueil, avec les lieux sponsorisés. Deux modèles : <b>image seule</b> (votre affiche, mise au format) ou <b>texte + image</b>.</div>
-      ${data.length ? data.map(a => { const s = st(a); return `<div class="adrow" data-id="${a.id}"><span class="mth" style="background:center/cover url('${esc(a.image_url || '')}')"></span><div class="mgin"><b>${esc(a.title || (a.model === 'image' ? 'Affiche' : 'Pub'))}</b><small>${a.model === 'image' ? 'Image seule' : 'Texte + image'}${a.ends_on ? ' · jusqu’au ' + new Date(a.ends_on).toLocaleDateString('fr-FR') : ''}</small></div><span class="adst ${s[0]}">${s[1]}</span></div>`; }).join('') : '<div class="mgem"><p>Aucune publicité. Créez la première.</p></div>'}
+      ${data.length ? data.map((a, i) => { const s = st(a), k = stats[a.id] || { views: 0, clicks: 0 }, left = a.ends_on ? Math.ceil((new Date(a.ends_on) - new Date(new Date().toISOString().slice(0, 10))) / 864e5) : null;
+        return `<div class="adrow" data-id="${a.id}"><span class="mth" style="background:center/cover url('${esc(a.image_url || '')}')"></span><div class="mgin"><b>${esc(a.title || a.advertiser || (a.model === 'image' ? 'Affiche' : 'Pub'))}</b><small>${a.advertiser ? esc(a.advertiser) + ' · ' : ''}${a.model === 'image' ? 'Image seule' : 'Texte + image'}${left != null ? (left < 0 ? ' · terminée' : left <= 7 ? ' · <b style="color:#C23B3B">échéance dans ' + left + ' j</b>' : ' · jusqu’au ' + new Date(a.ends_on).toLocaleDateString('fr-FR')) : ''}</small><small>${k.views} affichages · ${k.clicks} clics${k.views ? ' (' + (k.clicks * 100 / k.views).toFixed(1) + ' %)' : ''}${a.amount ? ' · ' + a.amount + ' FCFA ' + (a.paid ? '<b style="color:#1E7A43">payé</b>' : '<b style="color:#C23B3B">à encaisser</b>') : ''}</small></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><span class="adst ${s[0]}">${s[1]}</span><span style="display:flex;gap:4px"><button class="adup" data-mv="-1" aria-label="Monter" ${i === 0 ? 'disabled' : ''}>▲</button><button class="adup" data-mv="1" aria-label="Descendre" ${i === data.length - 1 ? 'disabled' : ''}>▼</button></span></div></div>`; }).join('') : '<div class="mgem"><p>Aucune publicité. Créez la première.</p></div>'}
       <button class="btn mgadd" id="pb_add">${svg(I.plus, 20, '#fff', 2.4)} Nouvelle publicité</button>`;
     $('pb_add').onclick = () => openAd(null);
     document.querySelectorAll('.adrow').forEach(r => r.onclick = () => openAd(data.find(x => x.id === r.dataset.id)));
+    document.querySelectorAll('.adup').forEach(b => b.onclick = async e => { e.stopPropagation(); const row = b.closest('.adrow'), i = data.findIndex(x => x.id === row.dataset.id), j = i + +b.dataset.mv; if (j < 0 || j >= data.length) return;
+      const arr = data.slice(); [arr[i], arr[j]] = [arr[j], arr[i]]; try { await Promise.all(arr.map((x, n) => sb.from('ads').update({ sort: n }).eq('id', x.id))); } catch { toast('Erreur'); } drawPub(); });
   }
   function openAd(ad) {
-    const a = { model: 'image', title: '', body: '', cta: 'Découvrir', image_url: '', place_id: null, link_url: '', starts_on: '', ends_on: '', active: true, ...(ad || {}) }; let img = null, tgt = a.place_id ? 'place' : a.link_url ? 'link' : 'none', placeName = '';
+    const a = { model: 'image', title: '', body: '', cta: 'Découvrir', image_url: '', place_id: null, link_url: '', starts_on: '', ends_on: '', active: true, paid: false, ...(ad || {}) }; let img = null, tgt = a.place_id ? 'place' : a.link_url ? 'link' : 'none', placeName = '';
     const old = document.getElementById('mgsh'); if (old) old.remove();
     const el = document.createElement('div'); el.id = 'mgsh'; el.className = 'mgsh';
     el.innerHTML = `<div class="mgsc"></div><div class="mgsp"><div class="mgsx"><b>${ad ? 'Modifier la publicité' : 'Nouvelle publicité'}</b><button class="back" id="x_x" aria-label="Fermer">${svg('<path d="M6 6l12 12M18 6 6 18"/>', 18, '#142A52', 2.2)}</button></div>
@@ -100,6 +100,8 @@ export async function admin() {
         <div id="x_pl" style="display:none"><input id="x_q" type="search" placeholder="Rechercher la fiche du client…"><div id="x_r" class="sub"></div></div>
         <div id="x_lk" style="display:none"><input id="x_u" maxlength="200" placeholder="https://… ou +236 70 00 00 00"></div></div>
       <div style="display:flex;gap:8px"><div class="field" style="flex:1"><label>Début</label><input id="x_s" type="date"></div><div class="field" style="flex:1"><label>Fin</label><input id="x_e" type="date"></div></div>
+      <div class="field"><label>Annonceur (client)</label><input id="x_adv" maxlength="80" placeholder="Ex : Shopping Center"></div>
+      <div style="display:flex;gap:8px;align-items:flex-end"><div class="field" style="flex:1"><label>Montant (FCFA)</label><input id="x_am" type="number" inputmode="numeric" min="0"></div><div class="mgrow" style="flex:1;margin:0 0 14px"><b>Payé</b><button type="button" class="sw ${a.paid ? 'on' : ''}" id="x_pd"><i></i></button></div></div>
       <div class="mgrow" style="margin:4px 0 14px"><b>Publicité active</b><button type="button" class="sw ${a.active ? 'on' : ''}" id="x_a"><i></i></button></div>
       <button class="btn" id="x_ok">${ad ? 'Enregistrer' : 'Publier la publicité'}</button>${ad ? '<button class="btn ghost" id="x_del" style="margin-top:8px;color:#C23B3B">Supprimer</button>' : ''}</div>`;
     document.body.appendChild(el); requestAnimationFrame(() => el.classList.add('in'));
@@ -113,6 +115,7 @@ export async function admin() {
     el.querySelectorAll('.admodel button').forEach(b => b.onclick = () => { a.model = b.dataset.m; prev(); });
     el.querySelectorAll('#x_seg button').forEach(b => b.onclick = () => { tgt = b.dataset.g; prev(); });
     ['x_t', 'x_b', 'x_c'].forEach(k => q(k).oninput = prev);
+    q('x_adv').value = a.advertiser || ''; q('x_am').value = a.amount ?? ''; q('x_pd').onclick = () => { a.paid = !a.paid; q('x_pd').classList.toggle('on', a.paid); };
     q('x_a').onclick = () => { a.active = !a.active; q('x_a').classList.toggle('on', a.active); };
     q('x_ph').onclick = async () => { try { const p = await pickPhoto(); if (p) { img = p; prev(); } } catch (e) { if (!/cancel/i.test(e?.message || '')) toast('Photo impossible'); } };
     if (a.place_id) sb.from('places').select('name').eq('id', a.place_id).maybeSingle().then(r => { placeName = r.data?.name || ''; q('x_r').innerHTML = placeName ? `Fiche choisie : <b>${esc(placeName)}</b>` : ''; });
@@ -126,7 +129,7 @@ export async function admin() {
       const b = q('x_ok'); b.disabled = true; b.textContent = 'Enregistrement…';
       try {
         const url = img ? await uploadPhoto(prof.uid, img) : a.image_url;
-        const row = { model: a.model, title: q('x_t').value.trim() || null, body: a.model === 'text' ? q('x_b').value.trim() || null : null, cta: q('x_c').value.trim() || 'Découvrir', image_url: url, place_id: tgt === 'place' ? a.place_id : null, link_url: tgt === 'link' ? q('x_u').value.trim() || null : null, starts_on: q('x_s').value || null, ends_on: q('x_e').value || null, active: a.active };
+        const row = { model: a.model, title: q('x_t').value.trim() || null, body: a.model === 'text' ? q('x_b').value.trim() || null : null, cta: q('x_c').value.trim() || 'Découvrir', image_url: url, place_id: tgt === 'place' ? a.place_id : null, link_url: tgt === 'link' ? q('x_u').value.trim() || null : null, starts_on: q('x_s').value || null, ends_on: q('x_e').value || null, active: a.active, advertiser: q('x_adv').value.trim() || null, amount: q('x_am').value ? Math.round(+q('x_am').value) : null, paid: !!a.paid };
         const r = ad ? await sb.from('ads').update(row).eq('id', ad.id) : await sb.from('ads').insert(row); if (r.error) throw r.error;
         toast(ad ? 'Publicité modifiée' : 'Publicité publiée'); close(); drawPub();
       } catch (e) { toast('Erreur : ' + (e.message || e)); b.disabled = false; b.textContent = ad ? 'Enregistrer' : 'Publier la publicité'; }
@@ -141,7 +144,7 @@ export async function admin() {
       const my = ++seq, term = $('pl_q').value.trim().replace(/[%,()]/g, ' ');
       let q = sb.from('places').select('*').order('created_at', { ascending: false }).limit(60); if (term) q = q.or(`name.ilike.%${term}%,area.ilike.%${term}%`);
       const { data, error } = await q; if (my !== seq) return; if (error) { $('pl_l').innerHTML = errBox(error); return; }
-      $('pl_l').innerHTML = data.length ? data.map(p => `<a class="mgi" href="#/manage/${p.id}"><span class="mth big" style="background:center/cover url('${esc(cardPhoto(p) || '')}')"></span><div class="mgin"><b>${esc(p.name)}</b><small>${esc(CAT[p.category]?.label || p.category)}${p.area ? ' · ' + esc(p.area) : ''}</small><small>${{ published: 'Publié', pending: 'En attente', rejected: 'Refusé' }[p.status] || p.status}${p.owner_id ? ' · client rattaché' : ' · sans client'}${p.sponsored ? ' · sponsorisé' : ''}</small></div></a>`).join('') : '<div class="empty">Aucun lieu.</div>';
+      $('pl_l').innerHTML = data.length ? data.map(p => `<a class="mgi" href="#/manage/${p.id}"><span class="mth big" style="background:center/cover url('${esc(cardPhoto(p) || '')}')"></span><div class="mgin"><b>${esc(p.name)}</b><small>${esc(CAT[p.category]?.label || p.category)}${p.area ? ' · ' + esc(p.area) : ''}</small><small>${{ published: 'Publié', pending: 'En attente', rejected: 'Refusé' }[p.status] || p.status}${p.owner_id ? ' · client rattaché' : ' · sans client'}${p.sponsored ? ' · sponsorisé' + (p.sponsored_until ? ' jusqu’au ' + new Date(p.sponsored_until).toLocaleDateString('fr-FR') : '') : ''}${p.status === 'rejected' && p.reject_reason ? ' · ' + esc(p.reject_reason) : ''}</small></div></a>`).join('') : '<div class="empty">Aucun lieu.</div>';
     };
     $('pl_q').oninput = () => { clearTimeout(t); t = setTimeout(run, 300); }; run();
   }
