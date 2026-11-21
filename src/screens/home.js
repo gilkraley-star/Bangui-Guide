@@ -1,5 +1,6 @@
 import { esc, svg, I, CI, sb, configured, withDist, getPos, locate, attachStats, swr, fetchPlaces, sortSp, isSponsored, toast } from '../core.js';
 import { CATS, CAT, QUARTIERS } from '../data.js';
+import { adHtml, bindAds, adLive } from '../ads.js';
 import { shell, brand, rowHtml, skel, errBox, notConfigured, photoBox, spBadge, stars, onLeave } from '../ui.js';
 
 const GRID = ['restaurant', 'hotel', 'pharmacie', 'banque', 'hopital', 'culte', 'commerce', 'admin', 'station'];
@@ -26,7 +27,7 @@ export async function home() {
   document.getElementById('sf').onsubmit = e => { e.preventDefault(); location.hash = '#/search?q=' + encodeURIComponent(document.getElementById('q').value.trim()); };
   const recent = document.getElementById('recent');
   if (!configured) { recent.innerHTML = notConfigured(); return; }
-  let all = [], zone = 'Tous', t0;
+  let all = [], zone = 'Tous', t0, ads = [];
   const paint = () => {
   const draw = () => {
     document.getElementById('zones').innerHTML = ZONES.map(z => `<button class="zc ${z === zone ? 'on' : ''}" data-z="${z}">${z === 'Tous' ? svg('<path d="M12 3v3M12 18v3M3 12h3M18 12h3M6 6l2 2M16 16l2 2M6 18l2-2M16 8l2-2"/>', 15, 'currentColor', 2) : svg(I.pin, 15, '#E2541F', 2)} ${z}</button>`).join('')
@@ -38,18 +39,20 @@ export async function home() {
     const inv = document.getElementById('inv'); if (inv) inv.onclick = async () => { try { await navigator.share({ title: 'Bangui Guide', text: 'Trouve restaurants, hôtels, pharmacies et services à Bangui avec Bangui Guide !' }); } catch { } };
   };
   draw();
-  const feat = all.filter(isSponsored);
+  const feat = [...ads.map(a => ({ _ad: a })), ...all.filter(isSponsored)];
   if (feat.length) {
-    document.getElementById('feat').innerHTML = `<div class="bnr" id="bnr">${feat.map(p => `<a class="banner" href="#/place/${p.id}"><div class="bl">${photoBox(p, '', 46, true)}${spBadge(true)}</div>
+    document.getElementById('feat').innerHTML = `<div class="bnr" id="bnr">${feat.map(p => p._ad ? adHtml(p._ad) : `<a class="banner" href="#/place/${p.id}"><div class="bl">${photoBox(p, '', 46, true)}${spBadge(true)}</div>
       <div class="br"><div class="nm" style="font-size:17px;line-height:1.15">${esc(p.name)}</div><div style="font-size:12.5px;opacity:.9">${esc(CAT[p.category]?.label || '')}${p.area ? ' · ' + esc(p.area) : ''}</div>
       ${p._r != null ? `<div style="display:flex;gap:6px;align-items:center;font-size:12px">${stars(p._r, 13)} (${p._n} avis)</div>` : ''}<span class="bb">Découvrir ${svg('<path d="M5 12h14M13 6l6 6-6 6"/>', 15, '#3A1646', 2.5)}</span></div></a>`).join('')}</div>
       <div class="dots" id="dots">${feat.map((_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div>`;
+    bindAds(document.getElementById('feat'));
     const b = document.getElementById('bnr'), dots = [...document.querySelectorAll('#dots i')];
     b.addEventListener('scroll', () => { const i = Math.round(b.scrollLeft / b.clientWidth); dots.forEach((d, k) => d.classList.toggle('on', k === i)); }, { passive: true });
     if (feat.length > 1) { clearInterval(t0); const t = t0 = setInterval(() => { const n = (Math.round(b.scrollLeft / b.clientWidth) + 1) % feat.length; b.scrollTo({ left: n * b.clientWidth, behavior: 'smooth' }); }, 4500); onLeave(() => clearInterval(t)); }
   }
   setTimeout(fit, 50);
   };
+  swr('ads', async () => { const r = await sb.from('ads').select('*').order('sort').order('created_at', { ascending: false }).limit(10); if (r.error) throw r.error; return r.data; }, d => { ads = (d || []).filter(adLive); if (all.length) paint(); }).catch(() => { });
   await swr('home', () => fetchPlaces(sb.from('places').select('*').eq('status', 'published').order('created_at', { ascending: false }).limit(60)), (data, info) => {
     if (!data) { recent.innerHTML = errBox(info.error); return; }
     all = withDist(data); paint();
