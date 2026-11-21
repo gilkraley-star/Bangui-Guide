@@ -572,9 +572,10 @@ img{content-visibility:auto}
 @media (max-height:690px){.fiche .ph{height:36px}.fiche .sxrooms .ph{height:42px}.fiche .sheet2 .ib{display:none}.fiche .sxt small,.fiche .sxs small,.fiche .sxb small,.fiche .sxf small{display:none}}
 
 /* fiche : la photo du haut absorbe l'espace libre (jamais coupée, jamais de vide) */
-.fiche .dtop{flex:1 1 0!important;min-height:112px;max-height:270px;display:flex;flex-direction:column}
+.fiche .dtop{flex:4 1 0!important;min-height:112px;max-height:430px;display:flex;flex-direction:column}
 .fiche .dtop .dph{flex:1 1 0;height:auto!important;min-height:0;transform:translateY(14px)}
-.fiche .sheet2{flex:0 1 auto!important;min-height:0}
+.fiche .sheet2{flex:1 1 auto!important;min-height:0}
+.fiche .dtop .dph{margin-bottom:6px}
 .fiche #tabc{flex:1 1 auto;min-height:0}
 .cdots{bottom:26px}.ccnt{bottom:22px}
 .xg{padding-top:6px}.nov>.xg,.nov>.mcl{-webkit-mask-image:linear-gradient(180deg,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(180deg,#000 calc(100% - 22px),transparent)}
