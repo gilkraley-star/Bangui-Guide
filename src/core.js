@@ -71,11 +71,21 @@ const kmBetween = (a, b) => { const r = x => x * Math.PI / 180, dl = r(b.lat - a
 export const fmtD = k => k < 1 ? `${Math.round(k * 1000)} m` : `${k.toFixed(1)} km`;
 export const withDist = a => { const me = getPos(); return a.map(p => ({ ...p, _d: me && p.lat != null && p.lng != null ? kmBetween(me, p) : null })); };
 export async function getGps() {
-  const p = Capacitor.isNativePlatform() ? await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 20000 })
-    : await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 20000 }));
+  if (Capacitor.isNativePlatform()) {
+    /* Android : demande explicitement l'autorisation (fenêtre « Autoriser la localisation ? ») */
+    let st = await Geolocation.checkPermissions().catch(() => ({}));
+    if (st.location !== 'granted' && st.coarseLocation !== 'granted') st = await Geolocation.requestPermissions({ permissions: ['location', 'coarseLocation'] });
+    if (st.location !== 'granted' && st.coarseLocation !== 'granted') throw new Error('denied');
+    let p; try { p = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 9000 }); } catch { p = await Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }); }
+    return { lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy };
+  }
+  const p = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 20000 }));
   return { lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy };
 }
-export async function locate() { try { const g = await getGps(); sessionStorage.setItem('bg_pos', JSON.stringify({ lat: g.lat, lng: g.lng })); return true; } catch { toast('Position indisponible : autorise la localisation'); return false; } }
+export async function locate() {
+  try { const g = await getGps(); sessionStorage.setItem('bg_pos', JSON.stringify({ lat: g.lat, lng: g.lng })); return true; }
+  catch (e) { toast(/denied|permission/i.test(e?.message || '') ? 'Localisation refusée : autorisez-la dans Réglages > Applications > Bangui Guide > Autorisations' : 'Position introuvable : activez le GPS de votre téléphone'); return false; }
+}
 
 /* ----- notes ----- */
 export async function attachStats(list) {

@@ -15,6 +15,11 @@ jobs:
       - run: npm install
       - run: npm run build
       - run: npx cap add android
+      - name: Permissions Android (localisation, appareil photo, réseau)
+        run: |
+          f=android/app/src/main/AndroidManifest.xml
+          for p in ACCESS_FINE_LOCATION ACCESS_COARSE_LOCATION CAMERA; do grep -q "android.permission.$p" $f || sed -i "s#<application#<uses-permission android:name=\"android.permission.$p\" />\n    <application#" $f; done
+          grep -n "uses-permission" $f
       - run: npx capacitor-assets generate --android
       - run: npx cap sync android
       - name: Build debug APK
