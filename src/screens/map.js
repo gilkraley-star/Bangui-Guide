@@ -5,7 +5,7 @@ import { CAT, CATS } from '../data.js';
 import { shell, rowHtml, onLeave, notConfigured } from '../ui.js';
 
 const PIN_COL = { restaurant: '#E5301F', hotel: '#1E6BE0', pharmacie: '#1FA64D', commerce: '#9B2FC9', banque: '#1E6BE0', admin: '#F5841F', culte: '#6B7185', hopital: '#E5301F', universite: '#1E3A8A', transport: '#0E9AA7', btp: '#E2541F', station: '#1E6BE0', voyage: '#0E9AA7' };
-const TILE_CACHE = 'bg-tiles-v1';
+const TILE_CACHE = 'bg-tiles-mt1';
 const CachedTiles = L.TileLayer.extend({
   createTile(coords, done) {
     const img = document.createElement('img'), url = this.getTileUrl(coords); img.alt = '';
@@ -28,7 +28,7 @@ export async function mapScreen() {
   document.getElementById('scroll').classList.add('maps');
   const me = getPos();
   const map = L.map('map', { zoomControl: false, attributionControl: true }).setView(me ? [me.lat, me.lng] : [4.3947, 18.5582], me ? 14 : 13);
-  new CachedTiles('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, keepBuffer: 4, attribution: '© OpenStreetMap' }).addTo(map);
+  new CachedTiles('https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}.png?key=6I9Q3K24blzN7hFuEjaD', { maxZoom: 20, keepBuffer: 4, attribution: '© MapTiler © OpenStreetMap' }).addTo(map);
   onLeave(() => map.remove());
   setTimeout(() => map.invalidateSize(), 200);
   let meMarker;
